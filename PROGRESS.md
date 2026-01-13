@@ -2,11 +2,11 @@
 
 ## Overview
 
-**The Void** is a privacy-first voice note app built with Flutter. Notes are ephemeral by default - they disappear after 60 seconds unless intentionally saved as "Gems".
+**The Void** is a privacy-first voice note app built with Flutter. Notes are ephemeral by default - they disappear after 10 seconds unless intentionally saved as "Gems".
 
 ## Core Philosophy
 
-- **Ephemeral by default**: All voice notes auto-delete after 60 seconds
+- **Ephemeral by default**: All voice notes auto-delete after 10 seconds
 - **Intentional by choice**: Users can "rescue" notes before they vanish
 - **Privacy-first**: App wipes all in-memory data when backgrounded
 - **Minimal friction**: One tap to record, one tap to save
@@ -25,15 +25,16 @@
 - [x] `VoidState` enum: `idle → listening → transcribing → countdown → voided/saved`
 - [x] `VoidController` manages all state transitions
 - [x] `VoidSession` holds volatile in-memory data (transcript, timer, etc.)
-- [x] 60-second countdown timer with auto-void
+- [x] **10-second countdown timer** with auto-void (reduced from 60s for faster testing)
 
 ### 3. Speech-to-Text Engine
 - [x] `SpeechService` wraps `speech_to_text` package
 - [x] Microphone permission handling via `permission_handler`
 - [x] Real-time transcription with partial results
-- [x] Auto-stop after 3 seconds of silence
+- [x] **Auto-stop after 5 seconds of silence** (extended for natural speech pauses)
 - [x] Maximum recording time: 2 minutes
 - [x] `SpeechController` bridges speech service with void controller
+- [x] Complete transcription preserved across pauses
 
 ### 4. Privacy Features
 - [x] `AppLifecycleController` observes app lifecycle
@@ -51,9 +52,11 @@
 - [x] `VoidScreen` - main interaction screen
 - [x] Mic button for starting recording
 - [x] Stop button (red) during recording
+- [x] **Animated waveform visualization** during active recording
 - [x] Real-time transcript display while speaking
 - [x] `VoidTimerWidget` - circular countdown with rescue button
 - [x] `TranscriptDisplay` - styled transcript container
+- [x] `WaveformVisualizer` - animated bars showing mic activity
 - [x] Visual state feedback (colors, icons per state)
 
 ---
@@ -104,7 +107,8 @@ lib/
 │   └── storage_service.dart     # Secure storage operations
 └── widgets/
     ├── void_timer_widget.dart   # Countdown display
-    └── transcript_display.dart  # Transcript UI component
+    ├── transcript_display.dart  # Transcript UI component
+    └── waveform_visualizer.dart # Animated waveform for recording
 ```
 
 ---
@@ -153,7 +157,7 @@ flutter run -d macos
         ┌──────────┐                            │
         │LISTENING │ ─── real-time transcript   │
         └────┬─────┘                            │
-             │ stop / 3s silence                │
+             │ stop / 5s silence                │
              ▼                                  │
       ┌─────────────┐                           │
       │TRANSCRIBING │                           │
@@ -161,7 +165,7 @@ flutter run -d macos
              │ has content                      │
              ▼                                  │
         ┌──────────┐                            │
-        │COUNTDOWN │ ─── 60 seconds             │
+        │COUNTDOWN │ ─── 10 seconds             │
         └────┬─────┘                            │
              │                                  │
       ┌──────┴──────┐                           │
@@ -176,8 +180,26 @@ flutter run -d macos
 
 ---
 
+## Changelog
+
+### v0.2.0 (2026-01-13)
+- ✨ Added animated waveform visualization during recording
+- ⏱️ Reduced countdown timer from 60s to 10s
+- 🎤 Extended silence detection from 3s to 5s for natural pauses
+- 📝 Complete transcription preserved across speech pauses
+- 🎨 New `WaveformVisualizer` widget with staggered bar animations
+
+### v0.1.0 (2026-01-12)
+- 🎉 Initial commit with speech engine integration
+- Core state machine and controllers
+- Speech-to-text integration
+- Privacy features (auto-wipe on background)
+- Basic UI with dark theme
+
+---
+
 ## Last Updated
 
-**Date**: 2026-01-12  
-**Commit**: Initial commit with speech engine integration
+**Date**: 2026-01-13
+**Commit**: Add waveform visualization, reduce countdown to 10s, extend silence detection
 

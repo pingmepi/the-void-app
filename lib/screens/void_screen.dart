@@ -5,6 +5,7 @@ import '../controllers/void_controller.dart';
 import '../controllers/speech_controller.dart';
 import '../widgets/void_timer_widget.dart';
 import '../widgets/transcript_display.dart';
+import '../widgets/waveform_visualizer.dart';
 
 /// Main screen for The Void app
 class VoidScreen extends ConsumerWidget {
@@ -57,14 +58,50 @@ class VoidScreen extends ConsumerWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Transcript display
-                  if (voidState.isTranscriptVisible || voidState == VoidState.listening)
+                  // Waveform during active listening (before any words captured)
+                  if (voidState == VoidState.listening && displayTranscript.isEmpty)
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                      child: TranscriptDisplay(
-                        transcript: displayTranscript.isEmpty
-                            ? 'Listening...'
-                            : displayTranscript,
+                      child: Column(
+                        children: [
+                          WaveformVisualizer(
+                            isActive: true,
+                            color: Colors.red[400]!,
+                            barCount: 9,
+                            width: 180,
+                            height: 80,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Listening...',
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: Colors.grey[500],
+                                ),
+                          ),
+                        ],
+                      ),
+                    )
+                  // Transcript display (when we have words or in countdown)
+                  else if (voidState.isTranscriptVisible ||
+                           (voidState == VoidState.listening && displayTranscript.isNotEmpty))
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                      child: Column(
+                        children: [
+                          // Mini waveform above transcript while still recording
+                          if (voidState == VoidState.listening)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 16.0),
+                              child: WaveformVisualizer(
+                                isActive: true,
+                                color: Colors.red[400]!,
+                                barCount: 5,
+                                width: 100,
+                                height: 40,
+                              ),
+                            ),
+                          TranscriptDisplay(transcript: displayTranscript),
+                        ],
                       ),
                     ),
 
@@ -139,7 +176,7 @@ class VoidScreen extends ConsumerWidget {
         return _buildListeningIndicator(context, ref);
       case VoidState.countdown:
         return VoidTimerWidget(
-          countdownSeconds: countdownSeconds ?? 60,
+          countdownSeconds: countdownSeconds ?? 10,
           onRescue: () {
             ref.read(voidControllerProvider.notifier).rescueNote(null);
           },

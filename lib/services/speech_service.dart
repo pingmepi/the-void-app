@@ -72,8 +72,8 @@ class SpeechService {
         onResult: (SpeechRecognitionResult result) {
           onTranscriptUpdate?.call(result.recognizedWords, result.finalResult);
         },
-        listenFor: const Duration(minutes: 2), // Allow longer recordings
-        pauseFor: const Duration(seconds: 3),  // Stop after 3 seconds of silence
+        listenFor: const Duration(minutes: 2), // Max 2 minutes recording
+        pauseFor: const Duration(seconds: 5),  // Stop after 5 seconds of silence (natural pauses)
         listenOptions: stt.SpeechListenOptions(
           partialResults: true,
           cancelOnError: false,

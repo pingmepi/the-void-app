@@ -53,10 +53,10 @@ class VoidController extends StateNotifier<VoidState> {
     }
   }
 
-  /// Start the 60-second countdown to void
+  /// Start the 10-second countdown to void
   void startCountdown() {
     if (state == VoidState.transcribing) {
-      _currentSession = _currentSession!.copyWith(countdownSeconds: 60);
+      _currentSession = _currentSession!.copyWith(countdownSeconds: 10);
       state = VoidState.countdown;
       _notifyVoidListeners();
       _startCountdownTimer();
