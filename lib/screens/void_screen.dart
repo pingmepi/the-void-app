@@ -55,71 +55,76 @@ class VoidScreen extends ConsumerWidget {
 
             // Main content area
             Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Waveform during active listening (before any words captured)
-                  if (voidState == VoidState.listening && displayTranscript.isEmpty)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                      child: Column(
-                        children: [
-                          WaveformVisualizer(
-                            isActive: true,
-                            color: Colors.red[400]!,
-                            barCount: 9,
-                            width: 180,
-                            height: 80,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Listening...',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: Colors.grey[500],
-                                ),
-                          ),
-                        ],
-                      ),
-                    )
-                  // Transcript display (when we have words or in countdown)
-                  else if (voidState.isTranscriptVisible ||
-                           (voidState == VoidState.listening && displayTranscript.isNotEmpty))
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                      child: Column(
-                        children: [
-                          // Mini waveform above transcript while still recording
-                          if (voidState == VoidState.listening)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 16.0),
-                              child: WaveformVisualizer(
-                                isActive: true,
-                                color: Colors.red[400]!,
-                                barCount: 5,
-                                width: 100,
-                                height: 40,
-                              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Waveform during active listening (before any words captured)
+                    if (voidState == VoidState.listening && displayTranscript.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            WaveformVisualizer(
+                              isActive: true,
+                              color: Colors.red[400]!,
+                              barCount: 9,
+                              width: 180,
+                              height: 60,
                             ),
-                          TranscriptDisplay(transcript: displayTranscript),
-                        ],
+                            const SizedBox(height: 12),
+                            Text(
+                              'Listening...',
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: Colors.grey[500],
+                                  ),
+                            ),
+                          ],
+                        ),
+                      )
+                    // Transcript display (when we have words or in countdown)
+                    else if (voidState.isTranscriptVisible ||
+                             (voidState == VoidState.listening && displayTranscript.isNotEmpty))
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Mini waveform above transcript while still recording
+                            if (voidState == VoidState.listening)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 12.0),
+                                child: WaveformVisualizer(
+                                  isActive: true,
+                                  color: Colors.red[400]!,
+                                  barCount: 5,
+                                  width: 80,
+                                  height: 30,
+                                ),
+                              ),
+                            TranscriptDisplay(transcript: displayTranscript),
+                          ],
+                        ),
                       ),
-                    ),
 
-                  const SizedBox(height: 40),
+                    const SizedBox(height: 24),
 
-                  // Main interaction area based on state
-                  _buildMainContent(context, ref, voidState, countdownSeconds),
+                    // Main interaction area based on state
+                    _buildMainContent(context, ref, voidState, countdownSeconds),
 
-                  // Error display
-                  if (speechState.error != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 16.0),
-                      child: Text(
-                        speechState.error!,
-                        style: TextStyle(color: Colors.red[400], fontSize: 12),
+                    // Error display
+                    if (speechState.error != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 12.0),
+                        child: Text(
+                          speechState.error!,
+                          style: TextStyle(color: Colors.red[400], fontSize: 12),
+                        ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
               ),
             ),
 
