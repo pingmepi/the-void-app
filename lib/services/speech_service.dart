@@ -9,11 +9,13 @@ class SpeechService {
 
   bool _isInitialized = false;
   bool _isListening = false;
+  bool _isManualStop = false; // Track manual stops to prevent callback race
 
   /// Callback for transcript updates (called with each partial/final result)
   Function(String text, bool isFinal)? onTranscriptUpdate;
 
-  /// Callback when speech recognition stops (user stopped speaking or timed out)
+  /// Callback when speech recognition stops automatically (silence detection/timeout)
+  /// NOT called when user manually stops
   Function()? onSpeechDone;
 
   /// Callback for errors
@@ -44,7 +46,11 @@ class SpeechService {
           // When status becomes 'done' or 'notListening', speech has stopped
           if (status == 'done' || status == 'notListening') {
             _isListening = false;
-            onSpeechDone?.call();
+            // Only call onSpeechDone if it was automatic (not manual stop)
+            if (!_isManualStop) {
+              onSpeechDone?.call();
+            }
+            _isManualStop = false; // Reset flag
           }
         },
       );
@@ -90,13 +96,16 @@ class SpeechService {
   }
 
   /// Stop listening (manual stop by user)
+  /// This immediately stops speech recognition - user action takes priority
   Future<void> stopListening() async {
     if (!_isListening) return;
 
+    _isManualStop = true; // Flag to prevent onSpeechDone callback
     try {
       await _speechToText.stop();
       _isListening = false;
     } catch (e) {
+      _isManualStop = false;
       onError?.call('Error stopping speech recognition: $e');
     }
   }
@@ -105,10 +114,12 @@ class SpeechService {
   Future<void> cancelListening() async {
     if (!_isListening) return;
 
+    _isManualStop = true; // Flag to prevent onSpeechDone callback
     try {
       await _speechToText.cancel();
       _isListening = false;
     } catch (e) {
+      _isManualStop = false;
       onError?.call('Error canceling speech recognition: $e');
     }
   }

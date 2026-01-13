@@ -67,13 +67,21 @@ class SpeechController extends StateNotifier<SpeechControllerState> {
   }
 
   /// Manually stop recording (user taps stop)
+  /// This takes priority over automatic speech detection
   Future<void> stopRecording() async {
+    // Immediately update state to prevent further processing
+    final currentTranscript = state.transcript;
+    state = state.copyWith(status: 'stopping');
+
+    // Stop speech recognition immediately
     await _speechService.stopListening();
-    
-    if (state.transcript.isNotEmpty) {
+
+    // Transition based on captured content
+    if (currentTranscript.isNotEmpty) {
       _voidController.stopListening();
       _voidController.startCountdown();
     } else {
+      _voidController.stopListening();
       _reset();
     }
   }
