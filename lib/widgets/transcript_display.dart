@@ -4,11 +4,13 @@ import 'package:flutter/material.dart';
 class TranscriptDisplay extends StatefulWidget {
   final String transcript;
   final double maxHeight;
+  final EdgeInsetsGeometry margin;
 
   const TranscriptDisplay({
     super.key,
     required this.transcript,
     this.maxHeight = 120, // ~3 lines of text
+    this.margin = EdgeInsets.zero,
   });
 
   @override
@@ -47,12 +49,16 @@ class _TranscriptDisplayState extends State<TranscriptDisplay> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final width = MediaQuery.sizeOf(context).width;
+    final paddingValue = (width * 0.05).clamp(14.0, 20.0);
+
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 24),
-      padding: const EdgeInsets.all(20),
+      margin: widget.margin,
+      padding: EdgeInsets.all(paddingValue),
       decoration: BoxDecoration(
         border: Border.all(
-          color: Colors.grey[800]!,
+          color: colorScheme.onSurface.withOpacity(0.18),
           width: 1,
         ),
         borderRadius: BorderRadius.circular(12),
@@ -64,7 +70,7 @@ class _TranscriptDisplayState extends State<TranscriptDisplay> {
           Text(
             'Transcript',
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Colors.grey[500],
+                  color: colorScheme.onSurfaceVariant,
                   letterSpacing: 1.2,
                 ),
           ),
@@ -78,9 +84,9 @@ class _TranscriptDisplayState extends State<TranscriptDisplay> {
                   end: Alignment.bottomCenter,
                   colors: [
                     Colors.transparent,
-                    Colors.white,
-                    Colors.white,
-                    Colors.white,
+                    colorScheme.onSurface,
+                    colorScheme.onSurface,
+                    colorScheme.onSurface,
                   ],
                   stops: const [0.0, 0.1, 0.9, 1.0],
                 ).createShader(bounds);
@@ -92,7 +98,7 @@ class _TranscriptDisplayState extends State<TranscriptDisplay> {
                 child: Text(
                   widget.transcript.isEmpty ? 'Listening...' : widget.transcript,
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Colors.white,
+                        color: colorScheme.onSurface,
                         height: 1.6,
                       ),
                 ),
