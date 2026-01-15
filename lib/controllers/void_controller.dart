@@ -107,15 +107,14 @@ class VoidController extends StateNotifier<VoidControllerViewState> {
       _wipeMemory();
       state = state.copyWith(status: VoidState.voided, clearSession: true);
       _notifyVoidListeners();
-
-      // Reset to idle after a brief moment
-      Future.delayed(const Duration(milliseconds: 500), () {
-        if (state.status == VoidState.voided) {
-          state = state.copyWith(status: VoidState.idle);
-          _notifyVoidListeners();
-        }
-      });
     }
+  }
+
+  /// Reset to idle state (for manual reset after voided/saved)
+  void reset() {
+    _wipeMemory();
+    state = state.copyWith(status: VoidState.idle, clearSession: true);
+    _notifyVoidListeners();
   }
 
   /// Wipe all volatile data (privacy feature)

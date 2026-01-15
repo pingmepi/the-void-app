@@ -7,6 +7,26 @@ void main() {
   runApp(const ProviderScope(child: TheVoidApp()));
 }
 
+/// App color constants - dark ethereal theme
+class VoidColors {
+  VoidColors._();
+
+  // Background colors - deep navy/purple
+  static const Color background = Color(0xFF0D0B14);
+  static const Color backgroundLight = Color(0xFF151221);
+
+  // Primary accent - ethereal green/teal
+  static const Color accent = Color(0xFF7FFFD4); // Aquamarine
+  static const Color accentDim = Color(0xFF4A9B8C);
+  static const Color accentGlow = Color(0xFF00FF9D);
+
+  // Text colors
+  static const Color textPrimary = Color(0xFFE8E8E8);
+  static const Color textSecondary = Color(0xFF8B8B9E);
+  static const Color textFaded = Color(0xFF4A4A5E);
+  static const Color textGhost = Color(0xFF2A2A3E);
+}
+
 class TheVoidApp extends ConsumerWidget {
   const TheVoidApp({super.key});
 
@@ -20,10 +40,16 @@ class TheVoidApp extends ConsumerWidget {
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.black,
+          seedColor: VoidColors.accent,
           brightness: Brightness.dark,
+          surface: VoidColors.background,
+          primary: VoidColors.accent,
+          onPrimary: VoidColors.background,
+          onSurface: VoidColors.textPrimary,
+          onSurfaceVariant: VoidColors.textSecondary,
         ),
-        scaffoldBackgroundColor: Colors.black,
+        scaffoldBackgroundColor: VoidColors.background,
+        fontFamily: 'serif', // Use serif font for ethereal feel
       ),
       home: const VoidScreen(),
       debugShowCheckedModeBanner: false,
