@@ -1,11 +1,13 @@
 import 'dart:async';
-import 'dart:io' if (dart.library.html) 'dart:html';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
+
+import 'file_helper_stub.dart'
+    if (dart.library.io) 'file_helper_io.dart' as file_helper;
 
 /// Captures raw audio in parallel with [SpeechService] transcription.
 ///
@@ -83,12 +85,7 @@ class RecordingService {
         return null;
       } else {
         // result is a file path on native
-        final file = File(result);
-        final bytes = await file.readAsBytes();
-        try {
-          await file.delete();
-        } catch (_) {}
-        return bytes;
+        return await file_helper.readAndDeleteFile(result);
       }
     } catch (e) {
       debugPrint('RecordingService: stopRecording failed: $e');
@@ -106,9 +103,7 @@ class RecordingService {
     } catch (_) {}
 
     if (!kIsWeb && _tempPath != null) {
-      try {
-        await File(_tempPath!).delete();
-      } catch (_) {}
+      await file_helper.deleteFile(_tempPath!);
       _tempPath = null;
     }
   }
