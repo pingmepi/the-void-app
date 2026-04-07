@@ -31,7 +31,16 @@ class AuthService {
     await supabase.auth.signOut();
   }
 
-  static User? get currentUser => supabase.auth.currentUser;
+  /// Returns the current user, or null if Supabase isn't initialized or no
+  /// session exists. The try-catch makes this safe to call in tests and during
+  /// early app startup before [Supabase.initialize] completes.
+  static User? get currentUser {
+    try {
+      return supabase.auth.currentUser;
+    } catch (_) {
+      return null;
+    }
+  }
 
   static bool get isLoggedIn => currentUser != null;
 
