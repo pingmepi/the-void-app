@@ -6,6 +6,7 @@ import 'package:the_void_app/controllers/gems_controller.dart';
 import 'package:the_void_app/models/gem_note.dart';
 import 'package:the_void_app/screens/gem_detail_screen.dart';
 import 'package:the_void_app/screens/gems_screen.dart';
+import 'package:the_void_app/screens/login_screen.dart';
 import 'package:the_void_app/services/storage_service.dart';
 import 'package:the_void_app/widgets/gem_card.dart';
 
@@ -248,6 +249,50 @@ void main() {
       await tester.tap(find.byTooltip('Back'));
       await tester.pumpAndSettle();
       expect(find.byType(GemDetailScreen), findsNothing);
+    });
+  });
+
+  // ─── LoginScreen ──────────────────────────────────────────────────────────
+
+  group('LoginScreen', () {
+    testWidgets('shows Google and Apple sign-in buttons', (tester) async {
+      await tester.pumpWidget(ProviderScope(
+        overrides: [
+          storageServiceProvider.overrideWithValue(FakeStorageService()),
+        ],
+        child: const MaterialApp(home: LoginScreen()),
+      ));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Google'), findsOneWidget);
+      expect(find.textContaining('Apple'), findsOneWidget);
+    });
+
+    testWidgets('"Maybe later" button pops screen', (tester) async {
+      await tester.pumpWidget(ProviderScope(
+        overrides: [
+          storageServiceProvider.overrideWithValue(FakeStorageService()),
+        ],
+        child: MaterialApp(
+          home: Builder(
+            builder: (context) => ElevatedButton(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const LoginScreen()),
+              ),
+              child: const Text('Go'),
+            ),
+          ),
+        ),
+      ));
+
+      await tester.tap(find.text('Go'));
+      await tester.pumpAndSettle();
+      expect(find.byType(LoginScreen), findsOneWidget);
+
+      await tester.tap(find.textContaining('Maybe later'));
+      await tester.pumpAndSettle();
+      expect(find.byType(LoginScreen), findsNothing);
     });
   });
 }
