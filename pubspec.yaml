@@ -60,6 +60,9 @@ dependencies:
   # Temp directory for native audio files
   path_provider: ^2.1.4
 
+  # HTTP client (used to fetch blob URLs on web for audio recording)
+  http: ^1.2.0
+
   # JSON serialization
   freezed_annotation: ^2.4.4
   json_annotation: ^4.9.0
