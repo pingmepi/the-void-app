@@ -1,205 +1,99 @@
-# The Void App - Development Progress
+# Progress
 
-## Overview
-
-**The Void** is a privacy-first voice note app built with Flutter. Notes are ephemeral by default - they disappear after 10 seconds unless intentionally saved as "Gems".
-
-## Core Philosophy
-
-- **Ephemeral by default**: All voice notes auto-delete after 10 seconds
-- **Intentional by choice**: Users can "rescue" notes before they vanish
-- **Privacy-first**: App wipes all in-memory data when backgrounded
-- **Minimal friction**: One tap to record, one tap to save
+Current status of The Void as of 2026-04-08.
 
 ---
 
-## ✅ Completed Features
+## Completed
 
-### 1. Project Setup & Architecture
-- [x] Flutter project initialized with proper structure
-- [x] Riverpod state management configured
-- [x] Code generation with Freezed + JSON Serializable
-- [x] Platform entitlements for microphone (macOS/iOS)
+### Core App
+- [x] State machine: `IDLE → LISTENING → TRANSCRIBING → COUNTDOWN → VOIDED | SAVED`
+- [x] VoidController with countdown timer (10 seconds), transcript accumulation
+- [x] SpeechService: real-time transcription, 5s silence detection, 2-minute max
+- [x] RecordingService: parallel audio capture (WebM on web, M4A on native)
+- [x] AppLifecycleController: auto-wipe volatile data on background
+- [x] Privacy: VoidSession is RAM-only, never persisted
 
-### 2. Core State Machine
-- [x] `VoidState` enum: `idle → listening → transcribing → countdown → voided/saved`
-- [x] `VoidController` manages all state transitions
-- [x] `VoidSession` holds volatile in-memory data (transcript, timer, etc.)
-- [x] **10-second countdown timer** with auto-void (reduced from 60s for faster testing)
+### Gems (Saved Notes)
+- [x] GemNote model (Freezed): id, transcript, savedAt, title, duration, tags, userId, audioUrl
+- [x] GemsController: save, delete, update title, sort, Supabase sync
+- [x] StorageService: encrypted local storage via flutter_secure_storage
+- [x] GemsScreen: list view, empty state, delete with confirmation dialog
+- [x] GemDetailScreen: full transcript, inline title editing, delete
+- [x] GemCard widget: title/preview, date, duration chip, callbacks
+- [x] Pending rescue: persists transcript before OAuth redirect, auto-expires after 5 minutes
 
-### 3. Speech-to-Text Engine
-- [x] `SpeechService` wraps `speech_to_text` package
-- [x] Microphone permission handling via `permission_handler`
-- [x] Real-time transcription with partial results
-- [x] **Auto-stop after 5 seconds of silence** (extended for natural speech pauses)
-- [x] Maximum recording time: 2 minutes
-- [x] `SpeechController` bridges speech service with void controller
-- [x] Complete transcription preserved across pauses
+### Authentication
+- [x] Supabase auth: Google + Apple OAuth
+- [x] AuthScreen: bottom-sheet auth gate during rescue flow
+- [x] LoginScreen: full-screen branded sign-in with "Maybe later" dismiss
+- [x] Auth state providers: isLoggedIn, currentUserId, userEmail
+- [x] AuthService.currentUser: try-catch for test/startup safety
+- [x] OAuth deep links: Android intent filter + iOS URL scheme (`com.thevoidapp://login-callback`)
 
-### 4. Privacy Features
-- [x] `AppLifecycleController` observes app lifecycle
-- [x] Auto-wipe when app is backgrounded/hidden
-- [x] In-memory only volatile data (never written to disk during session)
+### UI/UX
+- [x] Dark ethereal theme: navy/purple background, aquamarine accents, serif fonts
+- [x] GlowingMicButton: animated pulsing glow
+- [x] WaveformVisualizer: staggered animated bars during recording
+- [x] VoidTimerWidget: circular countdown with rescue button
+- [x] TranscriptDisplay: styled, auto-scrolling transcript
+- [x] EtherealText: floating background text
+- [x] Nav button on home screen: user initial (signed in) or sparkle (signed out) + gem count badge
+- [x] Responsive layout across screen sizes
 
-### 5. Secure Storage (Gems)
-- [x] `GemNote` model with Freezed (id, transcript, title, timestamps)
-- [x] `StorageService` using `flutter_secure_storage`
-- [x] `GemsController` for CRUD operations on saved gems
-- [x] Encrypted storage for saved notes
+### Infrastructure
+- [x] Runtime config via `--dart-define-from-file=.env.json` (compile-time injection)
+- [x] Runtime config guard (fails loudly in release, not just debug assert)
+- [x] Dockerfile + nginx.conf for Railway web deployment
+- [x] Android: INTERNET + RECORD_AUDIO permissions, minSdk 23, release signing via key.properties
+- [x] iOS: NSMicrophoneUsageDescription, NSSpeechRecognitionUsageDescription, URL schemes
 
-### 6. UI/UX
-- [x] Dark theme with Material 3
-- [x] `VoidScreen` - main interaction screen
-- [x] Mic button for starting recording
-- [x] Stop button (red) during recording
-- [x] **Animated waveform visualization** during active recording
-- [x] Real-time transcript display while speaking
-- [x] `VoidTimerWidget` - circular countdown with rescue button
-- [x] `TranscriptDisplay` - styled transcript container
-- [x] `WaveformVisualizer` - animated bars showing mic activity
-- [x] Visual state feedback (colors, icons per state)
+### Tests (43 total)
+- [x] FakeStorageService: in-memory test double for all storage operations
+- [x] 14 GemsController unit tests (save, delete, update title, sort, load from storage)
+- [x] 7 GemCard widget tests (display, callbacks, formatting)
+- [x] 19 screen tests (GemsScreen, GemDetailScreen, LoginScreen, VoidScreen nav button)
+- [x] 2 VoidController countdown tests
+- [x] 1 smoke test
+
+### Documentation
+- [x] README.md: overview, quick start, project structure, tech stack
+- [x] CLAUDE.md: developer guide for AI-assisted development
+- [x] CHANGELOG.md: user-facing feature history
+- [x] PROGRESS.md: this file
+- [x] docs/PRD.md: product requirements
+- [x] docs/ARCHITECTURE.md: system design
+- [x] docs/KNOWN-ISSUES.md: issues, fixes, workarounds
+- [x] docs/app-store-submission.md: Play Store + App Store guide with privacy policy
 
 ---
 
-## 🚧 In Progress / Pending
+## Pending
 
-### 1. Gem Saving Integration
-- [ ] Wire `rescueNote()` to actually save via `GemsController`
-- [ ] Show confirmation after saving
-- [ ] Return to idle state after save
+### High Priority (Store Submission Blockers)
+- [ ] **App icon**: replace Flutter default with branded 1024x1024 PNG (use flutter_launcher_icons)
+- [ ] **Delete account flow**: Apple requires this — needs Supabase Edge Function for server-side deletion
+- [ ] **Privacy policy page**: host the policy text (content ready in docs/app-store-submission.md) and add in-app url_launcher link
+- [ ] **Supabase DB setup**: run SQL for gems table, RLS policies, storage bucket (documented in submission guide)
 
-### 2. Gems Screen
-- [ ] List view of saved gems
-- [ ] View full transcript
-- [ ] Edit title
-- [ ] Delete gems
-- [ ] Navigation from main screen
+### Medium Priority (Feature Completeness)
+- [ ] **Account management on GemsScreen**: sign-out button / bottom sheet with user email
+- [ ] **Audio playback**: gems have audioUrl but no playback UI yet
+- [ ] **Gem search/filter**: search by transcript content or title
+- [ ] **Tags**: GemNote.tags field exists but no UI to add/edit tags
 
-### 3. Visual Polish
+### Low Priority (Polish)
 - [ ] Particle dissolve animation when note is voided
-- [ ] Smooth transitions between states
-- [ ] Sound/haptic feedback
-
-### 4. Platform Setup
-- [ ] Complete Xcode installation for macOS/iOS builds
-- [ ] Install CocoaPods for native plugin support
-- [ ] Android SDK setup (optional)
+- [ ] Sound/haptic feedback on state transitions
+- [ ] Smooth cross-fade transitions between states
+- [ ] Onboarding / first-run experience
 
 ---
 
-## Project Structure
+## Version History
 
-```
-lib/
-├── main.dart                    # App entry, ProviderScope, theme
-├── controllers/
-│   ├── void_controller.dart     # Core state machine
-│   ├── speech_controller.dart   # Speech ↔ Void bridge
-│   ├── gems_controller.dart     # Saved notes management
-│   └── app_lifecycle_controller.dart  # Privacy wipe on background
-├── models/
-│   ├── void_state.dart          # State enum + VoidSession
-│   └── gem_note.dart            # Freezed model for saved gems
-├── screens/
-│   └── void_screen.dart         # Main UI screen
-├── services/
-│   ├── speech_service.dart      # Speech-to-text wrapper
-│   └── storage_service.dart     # Secure storage operations
-└── widgets/
-    ├── void_timer_widget.dart   # Countdown display
-    ├── transcript_display.dart  # Transcript UI component
-    └── waveform_visualizer.dart # Animated waveform for recording
-```
-
----
-
-## Dependencies
-
-| Package | Version | Purpose |
-|---------|---------|---------|
-| flutter_riverpod | ^2.6.1 | State management |
-| riverpod_annotation | ^2.6.1 | Code generation for providers |
-| speech_to_text | ^7.3.0 | Voice recognition |
-| flutter_secure_storage | ^10.0.0 | Encrypted gem storage |
-| permission_handler | ^11.4.0 | Microphone permissions |
-| freezed_annotation | ^2.4.4 | Immutable models |
-| json_annotation | ^4.9.0 | JSON serialization |
-| uuid | ^4.5.2 | Unique IDs for gems |
-
----
-
-## How to Run
-
-```bash
-# Get dependencies
-flutter pub get
-
-# Generate code (models, providers)
-dart run build_runner build --delete-conflicting-outputs
-
-# Run on Chrome (works now)
-flutter run -d chrome
-
-# Run on macOS (requires Xcode + CocoaPods)
-flutter run -d macos
-```
-
----
-
-## State Flow Diagram
-
-```
-        ┌──────────┐
-        │   IDLE   │ ◄──────────────────────────┐
-        └────┬─────┘                            │
-             │ tap mic                          │
-             ▼                                  │
-        ┌──────────┐                            │
-        │LISTENING │ ─── real-time transcript   │
-        └────┬─────┘                            │
-             │ stop / 5s silence                │
-             ▼                                  │
-      ┌─────────────┐                           │
-      │TRANSCRIBING │                           │
-      └──────┬──────┘                           │
-             │ has content                      │
-             ▼                                  │
-        ┌──────────┐                            │
-        │COUNTDOWN │ ─── 10 seconds             │
-        └────┬─────┘                            │
-             │                                  │
-      ┌──────┴──────┐                           │
-      │             │                           │
-      ▼             ▼                           │
- ┌────────┐   ┌────────┐                        │
- │ VOIDED │   │ SAVED  │ (rescued as Gem)       │
- └────┬───┘   └────┬───┘                        │
-      │            │                            │
-      └────────────┴────────────────────────────┘
-```
-
----
-
-## Changelog
-
-### v0.2.0 (2026-01-13)
-- ✨ Added animated waveform visualization during recording
-- ⏱️ Reduced countdown timer from 60s to 10s
-- 🎤 Extended silence detection from 3s to 5s for natural pauses
-- 📝 Complete transcription preserved across speech pauses
-- 🎨 New `WaveformVisualizer` widget with staggered bar animations
-
-### v0.1.0 (2026-01-12)
-- 🎉 Initial commit with speech engine integration
-- Core state machine and controllers
-- Speech-to-text integration
-- Privacy features (auto-wipe on background)
-- Basic UI with dark theme
-
----
-
-## Last Updated
-
-**Date**: 2026-01-13
-**Commit**: Add waveform visualization, reduce countdown to 10s, extend silence detection
-
+| Version | Date | Highlights |
+|---------|------|-----------|
+| 0.3.0 | 2026-04-08 | Gems screens, auth, remote sync, mobile config, 43 tests |
+| 0.2.0 | 2026-01-13 | Waveform visualization, countdown tuning, silence detection |
+| 0.1.0 | 2026-01-12 | Initial: state machine, speech engine, privacy, basic UI |

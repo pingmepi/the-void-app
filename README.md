@@ -1,119 +1,169 @@
 # The Void
 
-**The Void** is a privacy-first voice note app built with Flutter.
+**Speak. Transcribe. Decide: keep or void.**
 
-Spoken thoughts are captured, transcribed, and then **voided by default**:
-after a short countdown (currently 10 seconds), your note is permanently
-deleted unless you intentionally rescue it as a **Gem**.
+The Void is a privacy-first voice note app. Your spoken thoughts are captured, transcribed in real time, and then **voided by default** — after a 10-second countdown, the note is permanently deleted unless you intentionally rescue it as a **Gem**.
 
 ---
 
-## Core Ideas
+## Why
 
-- **Ephemeral by default** – notes auto-delete after a brief countdown
-- **Intentional by choice** – you must actively rescue a note to keep it
-- **Privacy-first** – volatile state lives in memory and is wiped when the app
-  is backgrounded
-- **Low friction** – one tap to start speaking, one tap to stop, one tap to
-  rescue
+Most note apps hoard everything. The Void inverts that: nothing is kept unless you choose to keep it. This creates a low-pressure space to think out loud, where only the ideas worth saving survive.
 
 ---
 
 ## How It Works
 
-1. **Tap the mic** to start recording.
-2. The app listens and shows an **animated waveform** while you speak.
-3. A **live transcript** appears and auto-scrolls so you can always see the
-   last lines you spoke.
-4. When you stop speaking (or tap the red stop button), recording ends.
-5. If there is content, a **10-second countdown** starts – after that the note
-   is **voided forever**.
-6. During the countdown, you can **rescue** the note and save it as a **Gem**
-   (encrypted in secure storage).
+1. **Tap the mic** — recording starts with an animated waveform
+2. **Speak freely** — live transcript scrolls as you talk (up to 2 minutes, auto-pauses after 5s silence)
+3. **Stop** — a 10-second countdown begins
+4. **Rescue or let go** — tap "Rescue" to save as an encrypted Gem, or let the countdown finish to void it forever
+5. **Browse gems** — view, rename, or delete your saved transcripts
 
-Automatic behavior:
-
-- Recording can continue through natural pauses (up to ~5 seconds of silence)
-- Maximum recording duration is capped at **2 minutes**
-
-Manual overrides:
-
-- Tapping the **red stop button** immediately stops speech recognition and
-  moves you to processing/countdown
-- Cancel flows can discard the current note entirely
+Backgrounding the app at any point **immediately wipes** all in-progress data.
 
 ---
 
-## Feature Highlights
+## Quick Start
 
-- 🎙️ Speech-to-text with partial (live) results
-- 🔊 Animated waveform visualization while recording
-- 🧠 Auto-scrolling transcript that keeps the latest lines in view
-- ⏱️ Ephemeral 10-second countdown with rescue action
-- 🪙 "Gems": intentionally saved notes stored with encrypted secure storage
-- 📴 Privacy safeguards – wipes volatile data when the app is backgrounded
+### Prerequisites
 
-More implementation details and roadmap live in
-[`PROGRESS.md`](./PROGRESS.md).
+- Flutter SDK (3.10.7+)
+- A Supabase project (for auth & sync — [setup guide](docs/app-store-submission.md#part-3-in-app-requirements))
+
+### Setup
+
+```bash
+# Install dependencies
+flutter pub get
+
+# Generate Freezed models + Riverpod providers
+dart run build_runner build --delete-conflicting-outputs
+
+# Copy env template and add your Supabase credentials
+cp .env.json.example .env.json
+# Edit .env.json with your SUPABASE_URL and SUPABASE_ANON_KEY
+```
+
+### Run
+
+```bash
+# Web
+flutter run -d chrome --dart-define-from-file=.env.json
+
+# macOS
+flutter run -d macos --dart-define-from-file=.env.json
+
+# iOS / Android (after platform toolchain setup)
+flutter run --dart-define-from-file=.env.json
+```
+
+### Test
+
+```bash
+flutter test          # 43 tests across controllers, widgets, screens
+flutter analyze       # static analysis — should be 0 issues
+```
+
+---
+
+## Documentation
+
+| Document | What it covers |
+|----------|---------------|
+| [README.md](README.md) | This file — overview, quick start, project map |
+| [CLAUDE.md](CLAUDE.md) | Developer guide for AI-assisted development (commands, architecture, theme) |
+| [CHANGELOG.md](CHANGELOG.md) | User-facing feature history |
+| [PROGRESS.md](PROGRESS.md) | Roadmap — what's done, what's next |
+| [docs/PRD.md](docs/PRD.md) | Product requirements document |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | System design, state machine, data flow |
+| [docs/KNOWN-ISSUES.md](docs/KNOWN-ISSUES.md) | Known issues, fixes applied, and workarounds |
+| [docs/app-store-submission.md](docs/app-store-submission.md) | Step-by-step Play Store + App Store submission guide with privacy policy |
+
+---
+
+## Project Structure
+
+```
+lib/
+├── main.dart                          # Entry point, theme (VoidColors), ProviderScope
+├── config/
+│   └── app_config.dart                # Runtime config (Supabase creds via --dart-define)
+├── controllers/
+│   ├── void_controller.dart           # Core state machine (IDLE→LISTENING→…→VOIDED|SAVED)
+│   ├── speech_controller.dart         # Bridges SpeechService ↔ VoidController
+│   ├── gems_controller.dart           # Gem CRUD + Supabase sync + pending rescue
+│   ├── auth_controller.dart           # Auth state providers (isLoggedIn, userEmail)
+│   └── app_lifecycle_controller.dart  # Auto-wipes volatile data on background
+├── models/
+│   ├── void_state.dart                # VoidState enum + extension methods
+│   ├── gem_note.dart                  # GemNote (persistent) + VoidSession (volatile)
+│   ├── gem_note.freezed.dart          # Generated
+│   └── gem_note.g.dart               # Generated
+├── screens/
+│   ├── void_screen.dart               # Main screen (landing, listening, countdown, result)
+│   ├── gems_screen.dart               # Browse saved gems (list, empty state, delete)
+│   ├── gem_detail_screen.dart         # View transcript, edit title, delete
+│   ├── login_screen.dart              # Full-screen OAuth sign-in (Google/Apple)
+│   └── auth_screen.dart               # Auth gate during rescue flow (bottom sheet)
+├── services/
+│   ├── speech_service.dart            # Wraps speech_to_text (5s silence, 2min max)
+│   ├── recording_service.dart         # Parallel audio capture (WebM web, M4A native)
+│   ├── storage_service.dart           # Encrypted local storage + Supabase sync
+│   ├── auth_service.dart              # OAuth wrapper (Google, Apple)
+│   └── supabase_service.dart          # Supabase client singleton
+└── widgets/
+    ├── glowing_mic_button.dart        # Animated pulsing mic (app entry point)
+    ├── void_timer_widget.dart         # Circular countdown + rescue button
+    ├── transcript_display.dart        # Styled transcript container
+    ├── waveform_visualizer.dart       # Animated bars during recording
+    ├── ethereal_text.dart             # Floating background text
+    └── gem_card.dart                  # Gem list item (title, preview, date, delete)
+
+test/
+├── helpers/
+│   └── fake_storage_service.dart      # In-memory StorageService for tests
+├── gems_controller_test.dart          # 14 unit tests
+├── gem_card_test.dart                 # 7 widget tests
+├── gems_screen_test.dart              # 19 screen/integration tests
+├── void_controller_countdown_test.dart # 2 state machine tests
+└── widget_test.dart                   # 1 smoke test
+
+docs/
+├── PRD.md                             # Product requirements
+├── ARCHITECTURE.md                    # System design
+├── KNOWN-ISSUES.md                    # Issues and fixes
+└── app-store-submission.md            # Store submission guide + privacy policy
+```
 
 ---
 
 ## Tech Stack
 
-- **Framework**: Flutter
-- **State management**: Riverpod (`flutter_riverpod` + `riverpod_annotation`)
-- **Speech recognition**: `speech_to_text`
-- **Secure storage**: `flutter_secure_storage`
-- **Permissions**: `permission_handler`
+| Layer | Technology |
+|-------|-----------|
+| Framework | Flutter 3.10.7+ / Dart 3.10.7+ |
+| State | Riverpod (flutter_riverpod + riverpod_annotation) |
+| Speech | speech_to_text |
+| Audio | record (MediaRecorder on web, native on mobile) |
+| Storage | flutter_secure_storage (AES-encrypted) |
+| Auth | Supabase (Google + Apple OAuth) |
+| Backend | Supabase (Postgres DB + Storage buckets) |
+| Models | Freezed + json_serializable |
+| Deployment | Docker + nginx (Railway for web) |
 
 ---
 
-## Getting Started
+## Security
 
-### Prerequisites
-
-- Flutter installed and configured
-- For macOS/iOS: Xcode + CocoaPods
-- For Web: recent Chrome browser
-
-### Setup
-
-From the project root:
-
-```bash
-flutter pub get
-
-# Generate code (Freezed models, Riverpod providers)
-dart run build_runner build --delete-conflicting-outputs
-```
-
-### Run the App
-
-Web (Chrome):
-
-```bash
-flutter run -d chrome
-```
-
-macOS (desktop):
-
-```bash
-flutter run -d macos
-```
-
-Other platforms (iOS/Android) will work once their respective toolchains are
-configured.
+- Credentials injected at compile time via `--dart-define-from-file=.env.json` — never committed
+- All saved gems encrypted at rest via `flutter_secure_storage`
+- Volatile session data lives only in RAM — wiped on app background
+- Pending rescue transcripts auto-expire after 5 minutes
+- Runtime config guard prevents misconfigured release builds from running silently
 
 ---
 
-## Project Structure (High Level)
+## License
 
-- `lib/main.dart` – app entrypoint, theme, and `ProviderScope`
-- `lib/controllers/` – app state (void flow, speech bridge, lifecycle, gems)
-- `lib/models/` – Freezed data models (`VoidSession`, `GemNote`, etc.)
-- `lib/services/` – speech-to-text + secure storage
-- `lib/screens/void_screen.dart` – main user experience
-- `lib/widgets/` – timer, transcript display, waveform visualizer
-
-For a deeper, dev-focused view of the architecture and roadmap, see
-[`PROGRESS.md`](./PROGRESS.md).
+Private — not open source.
