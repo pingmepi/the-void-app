@@ -46,7 +46,7 @@ class GemsController extends StateNotifier<List<GemNote>> {
   /// Pending rescues expire after 30 minutes. If the user cancelled OAuth
   /// and never signed in, we clear the transcript rather than leaving
   /// private content in browser storage indefinitely.
-  static const _pendingRescueExpiryMinutes = 30;
+  static const _pendingRescueExpiryMinutes = 5;
 
   Future<void> _resumePendingRescue() async {
     try {
