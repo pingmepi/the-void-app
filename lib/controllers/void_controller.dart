@@ -1,12 +1,12 @@
 import 'dart:async';
+import 'dart:typed_data';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../models/void_state.dart';
+
 import '../models/gem_note.dart';
+import '../models/void_state.dart';
 
 /// Riverpod-facing state for [VoidController].
-///
-/// We intentionally keep the current [VoidSession] in the provider state so the
-/// UI rebuilds when countdown seconds / transcript change.
 class VoidControllerViewState {
   final VoidState status;
   final VoidSession? session;
@@ -28,38 +28,34 @@ class VoidControllerViewState {
   }
 }
 
-/// Central state manager for the Void app
-/// Manages: speech state, timer, transcript, and memory wipe
+/// Central state manager for the Void app.
+/// Manages: speech state, countdown timer, transcript, audio data, memory wipe.
 class VoidController extends StateNotifier<VoidControllerViewState> {
-  VoidController() : super(const VoidControllerViewState(status: VoidState.idle)) {
-    _initializeCountdownTimer();
-  }
-  
-  /// Countdown timer
+  VoidController()
+      : super(const VoidControllerViewState(status: VoidState.idle));
+
   Timer? _countdownTimer;
-  
-  /// Listeners for state changes
+  bool _countdownPaused = false;
+
+  /// Listeners for state changes (legacy support)
   final List<VoidStateListener> _listeners = [];
 
-  /// Get current session
   VoidSession? get currentSession => state.session;
-
-  /// Get current transcript
   String get transcript => state.session?.transcript ?? '';
-
-  /// Get remaining countdown seconds
   int? get countdownSeconds => state.session?.countdownSeconds;
 
-  /// Start listening for voice input
+  /// Transition to LISTENING and create a fresh session.
   void startListening() {
     if (state.status == VoidState.idle) {
-      final session = VoidSession();
-      state = state.copyWith(status: VoidState.listening, session: session);
+      state = state.copyWith(
+        status: VoidState.listening,
+        session: VoidSession(),
+      );
       _notifyVoidListeners();
     }
   }
 
-  /// Stop listening and start transcribing
+  /// Transition LISTENING → TRANSCRIBING.
   void stopListening() {
     if (state.status == VoidState.listening) {
       state = state.copyWith(status: VoidState.transcribing);
@@ -67,41 +63,58 @@ class VoidController extends StateNotifier<VoidControllerViewState> {
     }
   }
 
-  /// Update transcript with new text
+  /// Append / replace transcript text from the speech engine.
   void updateTranscript(String text) {
     final session = state.session;
     if (session == null) return;
-
     state = state.copyWith(session: session.copyWith(transcript: text));
     _notifyVoidListeners();
   }
 
-  /// Start the 10-second countdown to void
-  void startCountdown() {
+  /// Transition TRANSCRIBING → COUNTDOWN and start the 10-second timer.
+  /// [audioBytes] and [audioMimeType] are stored in the session for later upload.
+  void startCountdown({Uint8List? audioBytes, String? audioMimeType}) {
     if (state.status != VoidState.transcribing) return;
     final session = state.session;
     if (session == null) return;
 
+    _countdownPaused = false;
     state = state.copyWith(
       status: VoidState.countdown,
-      session: session.copyWith(countdownSeconds: 10),
+      session: session.copyWith(
+        countdownSeconds: 10,
+        audioBytes: audioBytes,
+        audioMimeType: audioMimeType,
+      ),
     );
     _notifyVoidListeners();
     _startCountdownTimer();
   }
 
-  /// Rescue the note before it's voided (save as gem)
+  /// Pause the countdown (e.g. while the auth sheet is open).
+  /// The timer keeps ticking internally but seconds stop decrementing.
+  void pauseCountdown() {
+    _countdownPaused = true;
+  }
+
+  /// Resume a previously paused countdown.
+  void resumeCountdown() {
+    _countdownPaused = false;
+  }
+
+  /// Transition COUNTDOWN → SAVED.
+  /// Actual gem persistence is handled by the caller (void_screen rescue button)
+  /// which has access to GemsController via Ref.
   void rescueNote(String? title) {
     if (state.status == VoidState.countdown && state.session != null) {
-      // This will be handled by GemsController
-      // For now, just transition to saved state
       _countdownTimer?.cancel();
+      _countdownPaused = false;
       state = state.copyWith(status: VoidState.saved);
       _notifyVoidListeners();
     }
   }
 
-  /// Void the note (permanent deletion)
+  /// Transition COUNTDOWN → VOIDED and wipe volatile data.
   void voidNote() {
     if (state.status == VoidState.countdown) {
       _wipeMemory();
@@ -110,41 +123,34 @@ class VoidController extends StateNotifier<VoidControllerViewState> {
     }
   }
 
-  /// Reset to idle state (for manual reset after voided/saved)
+  /// Reset to IDLE (called from result screen "Tap to continue").
   void reset() {
     _wipeMemory();
     state = state.copyWith(status: VoidState.idle, clearSession: true);
     _notifyVoidListeners();
   }
 
-  /// Wipe all volatile data (privacy feature)
   void _wipeMemory() {
     _countdownTimer?.cancel();
+    _countdownPaused = false;
     state = state.copyWith(clearSession: true);
   }
 
-  /// Initialize countdown timer
-  void _initializeCountdownTimer() {
-    // Timer will be started when countdown begins
-  }
-
-  /// Start the countdown timer
   void _startCountdownTimer() {
     _countdownTimer?.cancel();
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      // Don't tick while auth sheet is open
+      if (_countdownPaused) return;
+
       final session = state.session;
       final remaining = session?.countdownSeconds;
 
-      // If we've left countdown (e.g., rescued), stop ticking.
       if (state.status != VoidState.countdown) {
         timer.cancel();
         return;
       }
 
-      // Countdown should always have a session + remaining seconds.
-      // If it doesn't, fail closed and void.
       if (remaining == null || remaining <= 1) {
-        // Time's up - void the note.
         timer.cancel();
         voidNote();
         return;
@@ -157,24 +163,16 @@ class VoidController extends StateNotifier<VoidControllerViewState> {
     });
   }
 
-  /// Register a custom listener for state changes
-  void addVoidListener(VoidStateListener listener) {
-    _listeners.add(listener);
-  }
+  void addVoidListener(VoidStateListener listener) => _listeners.add(listener);
+  void removeVoidListener(VoidStateListener listener) =>
+      _listeners.remove(listener);
 
-  /// Remove a custom listener
-  void removeVoidListener(VoidStateListener listener) {
-    _listeners.remove(listener);
-  }
-
-  /// Notify all listeners of state change
   void _notifyVoidListeners() {
-    for (var listener in _listeners) {
+    for (final listener in _listeners) {
       listener(state.status, state.session);
     }
   }
 
-  /// Clean up resources
   @override
   void dispose() {
     _countdownTimer?.cancel();
@@ -183,31 +181,25 @@ class VoidController extends StateNotifier<VoidControllerViewState> {
   }
 }
 
-/// Callback type for state changes
 typedef VoidStateListener = void Function(VoidState state, VoidSession? session);
 
-/// Riverpod provider for VoidController
 final voidControllerProvider =
     StateNotifierProvider<VoidController, VoidControllerViewState>((ref) {
   return VoidController();
 });
 
-/// Provider to access current session
 final currentSessionProvider = Provider<VoidSession?>((ref) {
   return ref.watch(voidControllerProvider.select((s) => s.session));
 });
 
-/// Provider to access current transcript
 final transcriptProvider = Provider<String>((ref) {
   return ref.watch(
     voidControllerProvider.select((s) => s.session?.transcript ?? ''),
   );
 });
 
-/// Provider to access countdown seconds
 final countdownSecondsProvider = Provider<int?>((ref) {
   return ref.watch(
     voidControllerProvider.select((s) => s.session?.countdownSeconds),
   );
 });
-

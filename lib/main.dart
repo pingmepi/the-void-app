@@ -1,9 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'screens/void_screen.dart';
-import 'controllers/app_lifecycle_controller.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-void main() {
+import 'config/app_config.dart';
+import 'controllers/app_lifecycle_controller.dart';
+import 'screens/void_screen.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Hard runtime guard — works in debug AND release builds.
+  // assert() is compiled away in release; this is not.
+  if (!AppConfig.isConfigured) {
+    throw StateError(
+      'Missing Supabase credentials. '
+      'Build with --dart-define-from-file=.env.json '
+      '(copy .env.json.example → .env.json and fill in your values).',
+    );
+  }
+
+  await Supabase.initialize(
+    url: AppConfig.supabaseUrl,
+    anonKey: AppConfig.supabaseAnonKey,
+  );
+
   runApp(const ProviderScope(child: TheVoidApp()));
 }
 
@@ -49,11 +69,10 @@ class TheVoidApp extends ConsumerWidget {
           onSurfaceVariant: VoidColors.textSecondary,
         ),
         scaffoldBackgroundColor: VoidColors.background,
-        fontFamily: 'serif', // Use serif font for ethereal feel
+        fontFamily: 'serif',
       ),
       home: const VoidScreen(),
       debugShowCheckedModeBanner: false,
     );
   }
 }
-

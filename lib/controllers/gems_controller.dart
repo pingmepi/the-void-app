@@ -1,9 +1,12 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
+
 import '../models/gem_note.dart';
+import '../services/auth_service.dart';
 import '../services/storage_service.dart';
 
-/// Manages saved gems (persistent notes)
+/// Manages saved gems: local persistence + Supabase remote sync.
 class GemsController extends StateNotifier<List<GemNote>> {
   GemsController(this._storageService) : super([]) {
     _loadGems();
@@ -11,82 +14,158 @@ class GemsController extends StateNotifier<List<GemNote>> {
 
   final StorageService _storageService;
 
-  /// Load all gems from secure storage
+  /// On startup: load local gems, then pull from Supabase if authenticated.
+  /// Also checks for a pending rescue (transcript saved before OAuth redirect).
   Future<void> _loadGems() async {
     try {
-      final gems = await _storageService.loadAllGems();
-      state = gems;
+      // 1. Load local cache immediately (works offline)
+      final localGems = await _storageService.loadAllGems();
+      state = localGems;
+
+      final userId = AuthService.userId;
+
+      // 2. If authenticated, replace with authoritative Supabase data
+      if (userId != null) {
+        final remoteGems =
+            await _storageService.fetchGemsFromSupabase(userId);
+        if (remoteGems.isNotEmpty) {
+          state = remoteGems;
+        }
+      }
+
+      // 3. Check for a pending rescue that survived a web OAuth redirect
+      await _resumePendingRescue();
     } catch (e) {
-      print('Error loading gems: $e');
-      state = [];
+      debugPrint('GemsController: _loadGems failed: $e');
     }
   }
 
-  /// Save a new gem
+  /// If the user was redirected to OAuth mid-rescue, their transcript was
+  /// persisted to secure storage. Resume the save now that they're back.
+  Future<void> _resumePendingRescue() async {
+    try {
+      final pending = await _storageService.readPendingRescue();
+      if (pending == null) return;
+
+      final userId = AuthService.userId;
+      if (userId == null) return; // still not logged in — keep pending
+
+      // Clear first to prevent double-save on re-init
+      await _storageService.clearPendingRescue();
+
+      await saveGem(
+        transcript: pending['transcript'] as String,
+        durationSeconds: pending['durationSeconds'] as int?,
+        // Audio bytes don't survive a page reload, so no audio here
+      );
+
+      debugPrint('GemsController: pending rescue saved successfully');
+    } catch (e) {
+      debugPrint('GemsController: _resumePendingRescue failed: $e');
+    }
+  }
+
+  /// Save a gem locally, then upload audio + sync to Supabase if authenticated.
   Future<void> saveGem({
     required String transcript,
     String? title,
     int? durationSeconds,
+    Uint8List? audioBytes,
+    String? audioMimeType,
   }) async {
-    try {
-      final gem = GemNote(
-        id: const Uuid().v4(),
-        transcript: transcript,
-        savedAt: DateTime.now(),
-        title: title,
-        durationSeconds: durationSeconds,
-      );
+    final userId = AuthService.userId;
 
-      // Save to secure storage
-      await _storageService.saveGem(gem);
+    final gem = GemNote(
+      id: const Uuid().v4(),
+      transcript: transcript,
+      savedAt: DateTime.now(),
+      title: title,
+      durationSeconds: durationSeconds,
+      userId: userId,
+    );
 
-      // Update state
-      state = [...state, gem];
-    } catch (e) {
-      print('Error saving gem: $e');
-      rethrow;
+    // 1. Save locally first — works offline, instant feedback
+    await _storageService.saveGem(gem);
+    state = [...state, gem];
+
+    // 2. If authenticated, sync to Supabase
+    if (userId != null) {
+      try {
+        String? audioUrl;
+
+        // Upload audio file (non-fatal if it fails)
+        if (audioBytes != null && audioMimeType != null) {
+          audioUrl = await _storageService.uploadAudio(
+            userId: userId,
+            gemId: gem.id,
+            audioBytes: audioBytes,
+            mimeType: audioMimeType,
+          );
+        }
+
+        // Upsert gem row with audioUrl
+        final gemWithAudio = gem.copyWith(audioUrl: audioUrl);
+        await _storageService.syncGemToSupabase(gemWithAudio);
+
+        // Update local copy with audioUrl
+        if (audioUrl != null) {
+          await _storageService.saveGem(gemWithAudio);
+          state = state
+              .map((g) => g.id == gem.id ? gemWithAudio : g)
+              .toList();
+        }
+      } catch (e) {
+        debugPrint('GemsController: remote sync failed (gem saved locally): $e');
+      }
     }
   }
 
-  /// Delete a gem
   Future<void> deleteGem(String gemId) async {
     try {
+      final gem = state.firstWhere((g) => g.id == gemId);
       await _storageService.deleteGem(gemId);
-      state = state.where((gem) => gem.id != gemId).toList();
+
+      if (gem.userId != null) {
+        await _storageService.deleteGemFromSupabase(
+            gemId, gem.userId!, gem.audioUrl);
+      }
+
+      state = state.where((g) => g.id != gemId).toList();
     } catch (e) {
-      print('Error deleting gem: $e');
+      debugPrint('GemsController: deleteGem failed: $e');
       rethrow;
     }
   }
 
-  /// Update a gem's title
   Future<void> updateGemTitle(String gemId, String newTitle) async {
     try {
-      final gemIndex = state.indexWhere((gem) => gem.id == gemId);
-      if (gemIndex != -1) {
-        final updatedGem = state[gemIndex].copyWith(title: newTitle);
-        await _storageService.saveGem(updatedGem);
-        
-        final newState = [...state];
-        newState[gemIndex] = updatedGem;
-        state = newState;
+      final idx = state.indexWhere((g) => g.id == gemId);
+      if (idx == -1) return;
+
+      final updated = state[idx].copyWith(title: newTitle);
+      await _storageService.saveGem(updated);
+
+      if (updated.userId != null) {
+        await _storageService.syncGemToSupabase(updated);
       }
+
+      final newState = [...state];
+      newState[idx] = updated;
+      state = newState;
     } catch (e) {
-      print('Error updating gem: $e');
+      debugPrint('GemsController: updateGemTitle failed: $e');
       rethrow;
     }
   }
 
-  /// Get a specific gem by ID
   GemNote? getGem(String gemId) {
     try {
-      return state.firstWhere((gem) => gem.id == gemId);
-    } catch (e) {
+      return state.firstWhere((g) => g.id == gemId);
+    } catch (_) {
       return null;
     }
   }
 
-  /// Get all gems sorted by date (newest first)
   List<GemNote> getGemsSorted() {
     final sorted = [...state];
     sorted.sort((a, b) => b.savedAt.compareTo(a.savedAt));
@@ -94,21 +173,16 @@ class GemsController extends StateNotifier<List<GemNote>> {
   }
 }
 
-/// Riverpod provider for GemsController
 final gemsControllerProvider =
     StateNotifierProvider<GemsController, List<GemNote>>((ref) {
   final storageService = ref.watch(storageServiceProvider);
   return GemsController(storageService);
 });
 
-/// Provider to get all gems
 final allGemsProvider = Provider<List<GemNote>>((ref) {
   return ref.watch(gemsControllerProvider);
 });
 
-/// Provider to get gems sorted by date
 final sortedGemsProvider = Provider<List<GemNote>>((ref) {
-  final controller = ref.watch(gemsControllerProvider.notifier);
-  return controller.getGemsSorted();
+  return ref.watch(gemsControllerProvider.notifier).getGemsSorted();
 });
-

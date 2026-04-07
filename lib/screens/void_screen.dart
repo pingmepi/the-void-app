@@ -2,13 +2,17 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../controllers/auth_controller.dart';
+import '../controllers/gems_controller.dart';
+import '../controllers/speech_controller.dart';
+import '../controllers/void_controller.dart';
 import '../main.dart';
 import '../models/void_state.dart';
-import '../controllers/void_controller.dart';
-import '../controllers/speech_controller.dart';
-import '../widgets/void_timer_widget.dart';
 import '../widgets/ethereal_text.dart';
 import '../widgets/glowing_mic_button.dart';
+import '../widgets/void_timer_widget.dart';
+import 'auth_screen.dart';
 
 /// Main screen for The Void app - Ethereal voice capture experience
 class VoidScreen extends ConsumerWidget {
@@ -33,7 +37,7 @@ class VoidScreen extends ConsumerWidget {
           builder: (context, constraints) {
             final width = constraints.maxWidth;
             final height = constraints.maxHeight;
-            final micButtonSize = (math.min(width, height) * 0.18).clamp(70.0, 100.0);
+            final micButtonSize = (math.min(width, height) * 0.22).clamp(96.0, 140.0);
 
             // Decide which screen to show based on state
             if (voidState == VoidState.idle) {
@@ -109,7 +113,7 @@ class VoidScreen extends ConsumerWidget {
                     Text(
                       'what remains.',
                       style: TextStyle(
-                        color: VoidColors.textSecondary.withOpacity(0.5),
+                        color: VoidColors.textSecondary.withValues(alpha: 0.5),
                         fontSize: 14,
                         fontStyle: FontStyle.italic,
                         fontFamily: 'serif',
@@ -178,7 +182,7 @@ class VoidScreen extends ConsumerWidget {
         child: Text(
           '...fragments of the lost data...',
           style: TextStyle(
-            color: VoidColors.textSecondary.withOpacity(0.6),
+            color: VoidColors.textSecondary.withValues(alpha: 0.6),
             fontSize: 16,
             fontStyle: FontStyle.italic,
             fontFamily: 'serif',
@@ -213,8 +217,8 @@ class VoidScreen extends ConsumerWidget {
             child: Text(
               displayPhrases[i],
               style: TextStyle(
-                color: VoidColors.accent.withOpacity(
-                  0.3 + (i / displayPhrases.length) * 0.7,
+                color: VoidColors.accent.withValues(
+                  alpha: 0.3 + (i / displayPhrases.length) * 0.7,
                 ),
                 fontSize: 18 + (i * 2),
                 fontFamily: 'serif',
@@ -264,9 +268,7 @@ class VoidScreen extends ConsumerWidget {
                   ),
                 VoidTimerWidget(
                   countdownSeconds: countdownSeconds,
-                  onRescue: () {
-                    ref.read(voidControllerProvider.notifier).rescueNote(null);
-                  },
+                  onRescue: () => _handleRescue(context, ref),
                 ),
               ],
             ),
@@ -274,6 +276,43 @@ class VoidScreen extends ConsumerWidget {
         ),
       ],
     );
+  }
+
+  /// Handle the Rescue button tap — gate on auth, then save gem.
+  Future<void> _handleRescue(BuildContext context, WidgetRef ref) async {
+    final isLoggedIn = ref.read(isLoggedInProvider);
+
+    if (!isLoggedIn) {
+      // Pause countdown while auth sheet is open
+      ref.read(voidControllerProvider.notifier).pauseCountdown();
+
+      final didAuth = await showModalBottomSheet<bool>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (_) => const AuthScreen(),
+      );
+
+      if (didAuth != true) {
+        // User dismissed without signing in — resume countdown
+        ref.read(voidControllerProvider.notifier).resumeCountdown();
+        return;
+      }
+    }
+
+    // Save the gem (transcript + audio bytes from current session)
+    final session = ref.read(voidControllerProvider).session;
+    if (session != null && session.transcript.isNotEmpty) {
+      await ref.read(gemsControllerProvider.notifier).saveGem(
+            transcript: session.transcript,
+            durationSeconds: session.recordingDuration.inSeconds,
+            audioBytes: session.audioBytes,
+            audioMimeType: session.audioMimeType,
+          );
+    }
+
+    // Transition UI to saved state
+    ref.read(voidControllerProvider.notifier).rescueNote(null);
   }
 
   /// Result screen (saved or voided)
@@ -287,35 +326,35 @@ class VoidScreen extends ConsumerWidget {
       children: [
         const EtherealBackground(),
         Positioned.fill(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                isVoided ? Icons.blur_on : Icons.auto_awesome,
-                size: 64,
-                color: isVoided
-                    ? VoidColors.textFaded
-                    : VoidColors.accent,
-              ),
-              const SizedBox(height: 24),
-              Text(
-                isVoided ? 'Dissolved into the void' : 'Preserved as a Gem',
-                style: TextStyle(
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () {
+              ref.read(voidControllerProvider.notifier).reset();
+            },
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  isVoided ? Icons.blur_on : Icons.auto_awesome,
+                  size: 64,
                   color: isVoided
-                      ? VoidColors.textSecondary
+                      ? VoidColors.textFaded
                       : VoidColors.accent,
-                  fontSize: 20,
-                  fontStyle: FontStyle.italic,
-                  fontFamily: 'serif',
                 ),
-              ),
-              const SizedBox(height: 48),
-              // Tap to continue
-              GestureDetector(
-                onTap: () {
-                  ref.read(voidControllerProvider.notifier).reset();
-                },
-                child: Text(
+                const SizedBox(height: 24),
+                Text(
+                  isVoided ? 'Dissolved into the void' : 'Preserved as a Gem',
+                  style: TextStyle(
+                    color: isVoided
+                        ? VoidColors.textSecondary
+                        : VoidColors.accent,
+                    fontSize: 20,
+                    fontStyle: FontStyle.italic,
+                    fontFamily: 'serif',
+                  ),
+                ),
+                const SizedBox(height: 48),
+                Text(
                   'Tap to continue',
                   style: TextStyle(
                     color: VoidColors.textFaded,
@@ -323,8 +362,8 @@ class VoidScreen extends ConsumerWidget {
                     fontFamily: 'serif',
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ],

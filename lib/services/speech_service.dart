@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
@@ -29,11 +30,14 @@ class SpeechService {
     if (_isInitialized) return true;
 
     try {
-      // Request microphone permission
-      final status = await Permission.microphone.request();
-      if (!status.isGranted) {
-        onError?.call('Microphone permission denied');
-        return false;
+      // permission_handler doesn't support web; the browser handles mic
+      // permission natively when speech_to_text calls getUserMedia.
+      if (!kIsWeb) {
+        final status = await Permission.microphone.request();
+        if (!status.isGranted) {
+          onError?.call('Microphone permission denied');
+          return false;
+        }
       }
 
       // Initialize speech to text

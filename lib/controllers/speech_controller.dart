@@ -1,64 +1,70 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../services/recording_service.dart';
 import '../services/speech_service.dart';
 import 'void_controller.dart';
 
-/// Controller that bridges SpeechService with VoidController
-/// Handles the flow: tap → listen → transcribe → countdown
+/// Bridges [SpeechService] + [RecordingService] with [VoidController].
+/// Starts/stops both audio capture and speech recognition in parallel.
 class SpeechController extends StateNotifier<SpeechControllerState> {
   final Ref _ref;
   final SpeechService _speechService;
+  final RecordingService _recordingService;
   late final VoidController _voidController;
-  
-  SpeechController(this._ref, this._speechService) 
+
+  SpeechController(this._ref, this._speechService, this._recordingService)
       : super(const SpeechControllerState()) {
     _voidController = _ref.read(voidControllerProvider.notifier);
     _setupCallbacks();
   }
 
   void _setupCallbacks() {
-    // When transcript is updated
     _speechService.onTranscriptUpdate = (text, isFinal) {
       state = state.copyWith(transcript: text, isFinalResult: isFinal);
       _voidController.updateTranscript(text);
     };
 
-    // When speech recognition stops (user stopped speaking)
-    _speechService.onSpeechDone = () {
+    _speechService.onSpeechDone = () async {
       if (state.transcript.isNotEmpty) {
-        // Speech done with content - stop listening and start countdown
         _voidController.stopListening();
-        _voidController.startCountdown();
+        // Stop audio recording and capture bytes
+        final audioBytes = await _recordingService.stopRecording();
+        _voidController.startCountdown(
+          audioBytes: audioBytes,
+          audioMimeType:
+              audioBytes != null ? _recordingService.mimeType : null,
+        );
       } else {
-        // No speech detected - go back to idle
         _voidController.stopListening();
+        await _recordingService.cancelRecording();
         _reset();
       }
     };
 
-    // Handle errors
     _speechService.onError = (error) {
       state = state.copyWith(error: error);
     };
 
-    // Status updates for debugging
     _speechService.onStatusChange = (status) {
       state = state.copyWith(status: status);
     };
   }
 
-  /// Start the recording flow
+  /// Start both speech recognition and audio recording.
   Future<void> startRecording() async {
-    // Clear any previous state
     state = const SpeechControllerState(status: 'initializing');
-    
-    // Tell void controller we're starting
     _voidController.startListening();
-    
-    // Start speech recognition
-    final success = await _speechService.startListening();
-    
-    if (!success) {
+
+    // Start both in parallel — audio failure is non-fatal
+    final results = await Future.wait([
+      _speechService.startListening(),
+      _recordingService.startRecording(),
+    ]);
+
+    final speechStarted = results[0];
+    if (!speechStarted) {
       state = state.copyWith(error: 'Failed to start speech recognition');
+      await _recordingService.cancelRecording();
       _voidController.stopListening();
       _reset();
     } else {
@@ -66,29 +72,34 @@ class SpeechController extends StateNotifier<SpeechControllerState> {
     }
   }
 
-  /// Manually stop recording (user taps stop)
-  /// This takes priority over automatic speech detection
+  /// Manually stop recording (user taps stop button).
   Future<void> stopRecording() async {
-    // Immediately update state to prevent further processing
     final currentTranscript = state.transcript;
     state = state.copyWith(status: 'stopping');
 
-    // Stop speech recognition immediately
+    // Stop speech first, then collect audio bytes
+    final audioFuture = _recordingService.stopRecording();
     await _speechService.stopListening();
+    final audioBytes = await audioFuture;
 
-    // Transition based on captured content
     if (currentTranscript.isNotEmpty) {
       _voidController.stopListening();
-      _voidController.startCountdown();
+      _voidController.startCountdown(
+        audioBytes: audioBytes,
+        audioMimeType: audioBytes != null ? _recordingService.mimeType : null,
+      );
     } else {
       _voidController.stopListening();
       _reset();
     }
   }
 
-  /// Cancel recording (discard everything)
+  /// Cancel and discard everything.
   Future<void> cancelRecording() async {
-    await _speechService.cancelListening();
+    await Future.wait([
+      _speechService.cancelListening(),
+      _recordingService.cancelRecording(),
+    ]);
     _voidController.stopListening();
     _reset();
   }
@@ -107,7 +118,6 @@ class SpeechController extends StateNotifier<SpeechControllerState> {
   }
 }
 
-/// State for SpeechController
 class SpeechControllerState {
   final String transcript;
   final bool isFinalResult;
@@ -136,10 +146,9 @@ class SpeechControllerState {
   }
 }
 
-/// Provider for SpeechController
-final speechControllerProvider = 
+final speechControllerProvider =
     StateNotifierProvider<SpeechController, SpeechControllerState>((ref) {
   final speechService = ref.watch(speechServiceProvider);
-  return SpeechController(ref, speechService);
+  final recordingService = ref.watch(recordingServiceProvider);
+  return SpeechController(ref, speechService, recordingService);
 });
-

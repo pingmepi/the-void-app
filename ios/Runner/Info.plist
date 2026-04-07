@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>The Void App</string>
+	<string>The Void</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -45,5 +45,26 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+
+	<!-- Microphone access for voice recording -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>The Void listens to your voice so you can speak your thoughts. Audio is only recorded when you tap the microphone.</string>
+
+	<!-- Speech recognition (on-device transcription) -->
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>The Void transcribes your spoken thoughts into text so you can rescue them as gems.</string>
+
+	<!-- OAuth deep link: Supabase redirects back after sign-in -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.thevoidapp</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

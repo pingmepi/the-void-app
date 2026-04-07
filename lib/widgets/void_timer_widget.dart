@@ -21,7 +21,7 @@ class VoidTimerWidget extends StatelessWidget {
     final lowTimeThreshold = math.max(1, (totalTime / 3).ceil());
     final isLowTime = countdownSeconds <= lowTimeThreshold;
     final timerColor = isLowTime ? colorScheme.error : colorScheme.onSurface;
-    final trackColor = colorScheme.onSurface.withOpacity(0.20);
+    final trackColor = colorScheme.onSurface.withValues(alpha: 0.20);
     final infoColor = colorScheme.onSurfaceVariant;
 
     // Calculate progress: decreases as time runs out
@@ -43,9 +43,9 @@ class VoidTimerWidget extends StatelessWidget {
 
         // Size the ring relative to available width so it works on small phones
         // and still looks intentional on tablets.
-        final ringSize = (maxW * 0.42).clamp(120.0, 190.0);
-        final strokeWidth = (ringSize * 0.05).clamp(5.0, 8.0);
-        final numberSize = (ringSize * 0.38).clamp(32.0, 64.0);
+        final ringSize = (maxW * 0.55).clamp(180.0, 280.0);
+        final strokeWidth = (ringSize * 0.05).clamp(6.0, 10.0);
+        final numberSize = (ringSize * 0.40).clamp(48.0, 96.0);
         final gap = (ringSize * 0.18).clamp(16.0, 28.0);
 
         return Column(
@@ -58,26 +58,28 @@ class VoidTimerWidget extends StatelessWidget {
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  // Draw from 12 o'clock for a more intuitive countdown.
-                  Transform.rotate(
-                    angle: -math.pi / 2,
-                    child: TweenAnimationBuilder<double>(
-                      // Intentionally no changing key here: we want the animation
-                      // to interpolate smoothly between successive values.
-                      tween: Tween<double>(end: progress),
-                      duration: animationDuration,
-                      curve: Curves.linear,
-                      builder: (context, value, child) {
-                        return CircularProgressIndicator(
-                          value: value,
-                          strokeWidth: strokeWidth,
-                          // Track (full ring behind the progress).
-                          backgroundColor: trackColor,
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(timerColor),
-                          strokeCap: StrokeCap.round,
-                        );
-                      },
+                  // Positioned.fill forces the indicator to fill the full
+                  // ring size — Stack passes loose constraints so without
+                  // this the CircularProgressIndicator renders at 36px.
+                  Positioned.fill(
+                    child: Transform.rotate(
+                      // Draw from 12 o'clock for a more intuitive countdown.
+                      angle: -math.pi / 2,
+                      child: TweenAnimationBuilder<double>(
+                        tween: Tween<double>(end: progress),
+                        duration: animationDuration,
+                        curve: Curves.linear,
+                        builder: (context, value, child) {
+                          return CircularProgressIndicator(
+                            value: value,
+                            strokeWidth: strokeWidth,
+                            backgroundColor: trackColor,
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(timerColor),
+                            strokeCap: StrokeCap.round,
+                          );
+                        },
+                      ),
                     ),
                   ),
                   // Countdown number display

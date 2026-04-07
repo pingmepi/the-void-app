@@ -39,6 +39,13 @@ mixin _$GemNote {
   /// Tags for organization (optional feature)
   List<String> get tags => throw _privateConstructorUsedError;
 
+  /// Supabase auth user ID — null for local-only gems
+  String? get userId => throw _privateConstructorUsedError;
+
+  /// Supabase Storage signed URL for the audio file.
+  /// Null if audio capture failed or this is a local-only gem.
+  String? get audioUrl => throw _privateConstructorUsedError;
+
   /// Serializes this GemNote to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
 
@@ -60,6 +67,8 @@ abstract class $GemNoteCopyWith<$Res> {
     String? title,
     int? durationSeconds,
     List<String> tags,
+    String? userId,
+    String? audioUrl,
   });
 }
 
@@ -84,6 +93,8 @@ class _$GemNoteCopyWithImpl<$Res, $Val extends GemNote>
     Object? title = freezed,
     Object? durationSeconds = freezed,
     Object? tags = null,
+    Object? userId = freezed,
+    Object? audioUrl = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -111,6 +122,14 @@ class _$GemNoteCopyWithImpl<$Res, $Val extends GemNote>
                 ? _value.tags
                 : tags // ignore: cast_nullable_to_non_nullable
                       as List<String>,
+            userId: freezed == userId
+                ? _value.userId
+                : userId // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            audioUrl: freezed == audioUrl
+                ? _value.audioUrl
+                : audioUrl // ignore: cast_nullable_to_non_nullable
+                      as String?,
           )
           as $Val,
     );
@@ -132,6 +151,8 @@ abstract class _$$GemNoteImplCopyWith<$Res> implements $GemNoteCopyWith<$Res> {
     String? title,
     int? durationSeconds,
     List<String> tags,
+    String? userId,
+    String? audioUrl,
   });
 }
 
@@ -155,6 +176,8 @@ class __$$GemNoteImplCopyWithImpl<$Res>
     Object? title = freezed,
     Object? durationSeconds = freezed,
     Object? tags = null,
+    Object? userId = freezed,
+    Object? audioUrl = freezed,
   }) {
     return _then(
       _$GemNoteImpl(
@@ -182,6 +205,14 @@ class __$$GemNoteImplCopyWithImpl<$Res>
             ? _value._tags
             : tags // ignore: cast_nullable_to_non_nullable
                   as List<String>,
+        userId: freezed == userId
+            ? _value.userId
+            : userId // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        audioUrl: freezed == audioUrl
+            ? _value.audioUrl
+            : audioUrl // ignore: cast_nullable_to_non_nullable
+                  as String?,
       ),
     );
   }
@@ -197,6 +228,8 @@ class _$GemNoteImpl implements _GemNote {
     this.title,
     this.durationSeconds,
     final List<String> tags = const [],
+    this.userId,
+    this.audioUrl,
   }) : _tags = tags;
 
   factory _$GemNoteImpl.fromJson(Map<String, dynamic> json) =>
@@ -234,9 +267,18 @@ class _$GemNoteImpl implements _GemNote {
     return EqualUnmodifiableListView(_tags);
   }
 
+  /// Supabase auth user ID — null for local-only gems
+  @override
+  final String? userId;
+
+  /// Supabase Storage signed URL for the audio file.
+  /// Null if audio capture failed or this is a local-only gem.
+  @override
+  final String? audioUrl;
+
   @override
   String toString() {
-    return 'GemNote(id: $id, transcript: $transcript, savedAt: $savedAt, title: $title, durationSeconds: $durationSeconds, tags: $tags)';
+    return 'GemNote(id: $id, transcript: $transcript, savedAt: $savedAt, title: $title, durationSeconds: $durationSeconds, tags: $tags, userId: $userId, audioUrl: $audioUrl)';
   }
 
   @override
@@ -251,7 +293,10 @@ class _$GemNoteImpl implements _GemNote {
             (identical(other.title, title) || other.title == title) &&
             (identical(other.durationSeconds, durationSeconds) ||
                 other.durationSeconds == durationSeconds) &&
-            const DeepCollectionEquality().equals(other._tags, _tags));
+            const DeepCollectionEquality().equals(other._tags, _tags) &&
+            (identical(other.userId, userId) || other.userId == userId) &&
+            (identical(other.audioUrl, audioUrl) ||
+                other.audioUrl == audioUrl));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -264,6 +309,8 @@ class _$GemNoteImpl implements _GemNote {
     title,
     durationSeconds,
     const DeepCollectionEquality().hash(_tags),
+    userId,
+    audioUrl,
   );
 
   /// Create a copy of GemNote
@@ -288,6 +335,8 @@ abstract class _GemNote implements GemNote {
     final String? title,
     final int? durationSeconds,
     final List<String> tags,
+    final String? userId,
+    final String? audioUrl,
   }) = _$GemNoteImpl;
 
   factory _GemNote.fromJson(Map<String, dynamic> json) = _$GemNoteImpl.fromJson;
@@ -315,6 +364,15 @@ abstract class _GemNote implements GemNote {
   /// Tags for organization (optional feature)
   @override
   List<String> get tags;
+
+  /// Supabase auth user ID — null for local-only gems
+  @override
+  String? get userId;
+
+  /// Supabase Storage signed URL for the audio file.
+  /// Null if audio capture failed or this is a local-only gem.
+  @override
+  String? get audioUrl;
 
   /// Create a copy of GemNote
   /// with the given fields replaced by the non-null parameter values.
