@@ -42,13 +42,31 @@ class GemsController extends StateNotifier<List<GemNote>> {
 
   /// If the user was redirected to OAuth mid-rescue, their transcript was
   /// persisted to secure storage. Resume the save now that they're back.
+  ///
+  /// Pending rescues expire after 30 minutes. If the user cancelled OAuth
+  /// and never signed in, we clear the transcript rather than leaving
+  /// private content in browser storage indefinitely.
+  static const _pendingRescueExpiryMinutes = 30;
+
   Future<void> _resumePendingRescue() async {
     try {
       final pending = await _storageService.readPendingRescue();
       if (pending == null) return;
 
+      // Always check expiry first — clear and bail if stale, regardless of
+      // auth state. This prevents abandoned transcripts from sitting in
+      // storage when the user cancelled OAuth and never came back.
+      final savedAt = DateTime.tryParse(pending['savedAt'] as String? ?? '');
+      if (savedAt == null ||
+          DateTime.now().difference(savedAt).inMinutes >
+              _pendingRescueExpiryMinutes) {
+        await _storageService.clearPendingRescue();
+        debugPrint('GemsController: pending rescue expired — cleared');
+        return;
+      }
+
       final userId = AuthService.userId;
-      if (userId == null) return; // still not logged in — keep pending
+      if (userId == null) return; // not yet signed in, rescue still within window
 
       // Clear first to prevent double-save on re-init
       await _storageService.clearPendingRescue();
