@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../controllers/auth_controller.dart';
 import '../controllers/gems_controller.dart';
 import '../main.dart';
 import '../models/gem_note.dart';
+import '../services/auth_service.dart';
 import '../widgets/gem_card.dart';
 import 'gem_detail_screen.dart';
 
@@ -13,6 +15,7 @@ class GemsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final gems = ref.watch(sortedGemsProvider);
+    final isLoggedIn = ref.watch(isLoggedInProvider);
 
     return Scaffold(
       backgroundColor: VoidColors.background,
@@ -31,6 +34,17 @@ class GemsScreen extends ConsumerWidget {
             letterSpacing: 1.2,
           ),
         ),
+        actions: [
+          if (isLoggedIn)
+            IconButton(
+              key: const Key('account_button'),
+              icon: Icon(
+                Icons.account_circle_outlined,
+                color: VoidColors.accent.withAlpha(180),
+              ),
+              onPressed: () => _showAccountSheet(context, ref),
+            ),
+        ],
       ),
       body: gems.isEmpty ? _buildEmptyState() : _buildGemsList(context, ref, gems),
     );
@@ -92,6 +106,78 @@ class GemsScreen extends ConsumerWidget {
           onDelete: () => _confirmDelete(context, ref, gem.id),
         );
       },
+    );
+  }
+
+  void _showAccountSheet(BuildContext context, WidgetRef ref) {
+    final email = ref.read(currentUserEmailProvider) ?? 'Unknown';
+
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: VoidColors.backgroundLight,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: VoidColors.textFaded,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Icon(
+                Icons.account_circle,
+                size: 48,
+                color: VoidColors.accent.withAlpha(150),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                email,
+                style: TextStyle(
+                  color: VoidColors.textPrimary,
+                  fontFamily: 'serif',
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  key: const Key('sign_out_button'),
+                  onPressed: () async {
+                    Navigator.pop(context); // close sheet
+                    await AuthService.signOut();
+                    if (context.mounted) {
+                      Navigator.pop(context); // pop GemsScreen back to home
+                    }
+                  },
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(color: VoidColors.textFaded),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: Text(
+                    'Sign out',
+                    style: TextStyle(
+                      color: VoidColors.textSecondary,
+                      fontFamily: 'serif',
+                      fontSize: 15,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
