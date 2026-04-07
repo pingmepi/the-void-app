@@ -9,8 +9,8 @@ void main() {
     // Build our app and trigger a frame.
     await tester.pumpWidget(const ProviderScope(child: TheVoidApp()));
 
-    // Verify that the app title is present
-    expect(find.text('The Void'), findsWidgets);
-    expect(find.text('Ready'), findsOneWidget);
+    // Verify that the landing screen tagline is present
+    expect(find.text('LISTEN TO THE'), findsOneWidget);
+    expect(find.text('what remains.'), findsOneWidget);
   });
 }

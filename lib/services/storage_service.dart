@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/gem_note.dart';
@@ -22,7 +23,7 @@ class StorageService {
       // Update gems index
       await _updateGemsIndex();
     } catch (e) {
-      print('Error saving gem to storage: $e');
+      debugPrint('Error saving gem to storage: $e');
       rethrow;
     }
   }
@@ -37,7 +38,7 @@ class StorageService {
       }
       return null;
     } catch (e) {
-      print('Error loading gem from storage: $e');
+      debugPrint('Error loading gem from storage: $e');
       return null;
     }
   }
@@ -62,7 +63,7 @@ class StorageService {
 
       return gems;
     } catch (e) {
-      print('Error loading all gems: $e');
+      debugPrint('Error loading all gems: $e');
       return [];
     }
   }
@@ -74,7 +75,7 @@ class StorageService {
       await _secureStorage.delete(key: key);
       await _updateGemsIndex();
     } catch (e) {
-      print('Error deleting gem: $e');
+      debugPrint('Error deleting gem: $e');
       rethrow;
     }
   }
@@ -91,7 +92,7 @@ class StorageService {
       final json = jsonEncode(gemIds);
       await _secureStorage.write(key: _gemsKey, value: json);
     } catch (e) {
-      print('Error updating gems index: $e');
+      debugPrint('Error updating gems index: $e');
     }
   }
 
@@ -105,7 +106,7 @@ class StorageService {
         }
       }
     } catch (e) {
-      print('Error clearing gems: $e');
+      debugPrint('Error clearing gems: $e');
       rethrow;
     }
   }

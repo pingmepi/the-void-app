@@ -21,7 +21,7 @@ class VoidTimerWidget extends StatelessWidget {
     final lowTimeThreshold = math.max(1, (totalTime / 3).ceil());
     final isLowTime = countdownSeconds <= lowTimeThreshold;
     final timerColor = isLowTime ? colorScheme.error : colorScheme.onSurface;
-    final trackColor = colorScheme.onSurface.withOpacity(0.20);
+    final trackColor = colorScheme.onSurface.withValues(alpha:0.20);
     final infoColor = colorScheme.onSurfaceVariant;
 
     // Calculate progress: decreases as time runs out

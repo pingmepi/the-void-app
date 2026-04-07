@@ -58,7 +58,7 @@ class _TranscriptDisplayState extends State<TranscriptDisplay> {
       padding: EdgeInsets.all(paddingValue),
       decoration: BoxDecoration(
         border: Border.all(
-          color: colorScheme.onSurface.withOpacity(0.18),
+          color: colorScheme.onSurface.withValues(alpha:0.18),
           width: 1,
         ),
         borderRadius: BorderRadius.circular(12),

@@ -30,7 +30,7 @@ class EtherealText extends StatelessWidget {
           child: Text(
             text,
             style: TextStyle(
-              color: VoidColors.textFaded.withOpacity(opacity),
+              color: VoidColors.textFaded.withValues(alpha:opacity),
               fontSize: fontSize,
               fontStyle: fontStyle,
               fontFamily: 'serif',
@@ -108,7 +108,7 @@ class ListeningBackground extends StatelessWidget {
           child: Text(
             'Memory is a',
             style: TextStyle(
-              color: VoidColors.textGhost.withOpacity(0.15),
+              color: VoidColors.textGhost.withValues(alpha:0.15),
               fontSize: size.width * 0.18,
               fontFamily: 'serif',
               fontStyle: FontStyle.italic,
@@ -121,7 +121,7 @@ class ListeningBackground extends StatelessWidget {
           child: Text(
             'Preserved remains',
             style: TextStyle(
-              color: VoidColors.textGhost.withOpacity(0.12),
+              color: VoidColors.textGhost.withValues(alpha:0.12),
               fontSize: size.width * 0.14,
               fontFamily: 'serif',
               fontStyle: FontStyle.italic,

@@ -109,7 +109,7 @@ class VoidScreen extends ConsumerWidget {
                     Text(
                       'what remains.',
                       style: TextStyle(
-                        color: VoidColors.textSecondary.withOpacity(0.5),
+                        color: VoidColors.textSecondary.withValues(alpha:0.5),
                         fontSize: 14,
                         fontStyle: FontStyle.italic,
                         fontFamily: 'serif',
@@ -178,7 +178,7 @@ class VoidScreen extends ConsumerWidget {
         child: Text(
           '...fragments of the lost data...',
           style: TextStyle(
-            color: VoidColors.textSecondary.withOpacity(0.6),
+            color: VoidColors.textSecondary.withValues(alpha:0.6),
             fontSize: 16,
             fontStyle: FontStyle.italic,
             fontFamily: 'serif',
@@ -213,7 +213,7 @@ class VoidScreen extends ConsumerWidget {
             child: Text(
               displayPhrases[i],
               style: TextStyle(
-                color: VoidColors.accent.withOpacity(
+                color: VoidColors.accent.withValues(alpha:
                   0.3 + (i / displayPhrases.length) * 0.7,
                 ),
                 fontSize: 18 + (i * 2),

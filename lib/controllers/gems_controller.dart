@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../models/gem_note.dart';
@@ -17,7 +18,7 @@ class GemsController extends StateNotifier<List<GemNote>> {
       final gems = await _storageService.loadAllGems();
       state = gems;
     } catch (e) {
-      print('Error loading gems: $e');
+      debugPrint('Error loading gems: $e');
       state = [];
     }
   }
@@ -43,7 +44,7 @@ class GemsController extends StateNotifier<List<GemNote>> {
       // Update state
       state = [...state, gem];
     } catch (e) {
-      print('Error saving gem: $e');
+      debugPrint('Error saving gem: $e');
       rethrow;
     }
   }
@@ -54,7 +55,7 @@ class GemsController extends StateNotifier<List<GemNote>> {
       await _storageService.deleteGem(gemId);
       state = state.where((gem) => gem.id != gemId).toList();
     } catch (e) {
-      print('Error deleting gem: $e');
+      debugPrint('Error deleting gem: $e');
       rethrow;
     }
   }
@@ -72,7 +73,7 @@ class GemsController extends StateNotifier<List<GemNote>> {
         state = newState;
       }
     } catch (e) {
-      print('Error updating gem: $e');
+      debugPrint('Error updating gem: $e');
       rethrow;
     }
   }

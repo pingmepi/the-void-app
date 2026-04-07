@@ -35,12 +35,12 @@ class GlowingMicButton extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: VoidColors.accentDim.withOpacity(0.6),
+                  color: VoidColors.accentDim.withValues(alpha:0.6),
                   width: 1.5,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: VoidColors.accentGlow.withOpacity(0.15),
+                    color: VoidColors.accentGlow.withValues(alpha:0.15),
                     blurRadius: glowSpread,
                     spreadRadius: glowSpread * 0.3,
                   ),
@@ -55,12 +55,12 @@ class GlowingMicButton extends StatelessWidget {
                 shape: BoxShape.circle,
                 color: VoidColors.background,
                 border: Border.all(
-                  color: VoidColors.accent.withOpacity(0.8),
+                  color: VoidColors.accent.withValues(alpha:0.8),
                   width: 2,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: VoidColors.accentGlow.withOpacity(0.3),
+                    color: VoidColors.accentGlow.withValues(alpha:0.3),
                     blurRadius: glowSpread * 0.8,
                     spreadRadius: 2,
                   ),
@@ -145,13 +145,13 @@ class _AnimatedGlowingMicButtonState extends State<AnimatedGlowingMicButton>
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: VoidColors.accentDim.withOpacity(0.6),
+                      color: VoidColors.accentDim.withValues(alpha:0.6),
                       width: 1.5,
                     ),
                     boxShadow: [
                       BoxShadow(
                         color: VoidColors.accentGlow
-                            .withOpacity(_glowAnimation.value),
+                            .withValues(alpha:_glowAnimation.value),
                         blurRadius: glowSpread * (1 + _glowAnimation.value),
                         spreadRadius: glowSpread * 0.3,
                       ),
@@ -171,7 +171,7 @@ class _AnimatedGlowingMicButtonState extends State<AnimatedGlowingMicButton>
             shape: BoxShape.circle,
             color: VoidColors.background,
             border: Border.all(
-              color: VoidColors.accent.withOpacity(0.8),
+              color: VoidColors.accent.withValues(alpha:0.8),
               width: 2,
             ),
           ),
