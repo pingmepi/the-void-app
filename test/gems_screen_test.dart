@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:the_void_app/controllers/auth_controller.dart';
 import 'package:the_void_app/controllers/gems_controller.dart';
 import 'package:the_void_app/models/gem_note.dart';
 import 'package:the_void_app/screens/gem_detail_screen.dart';
 import 'package:the_void_app/screens/gems_screen.dart';
 import 'package:the_void_app/screens/login_screen.dart';
+import 'package:the_void_app/screens/void_screen.dart';
 import 'package:the_void_app/services/storage_service.dart';
 import 'package:the_void_app/widgets/gem_card.dart';
 
@@ -293,6 +295,93 @@ void main() {
       await tester.tap(find.textContaining('Maybe later'));
       await tester.pumpAndSettle();
       expect(find.byType(LoginScreen), findsNothing);
+    });
+  });
+
+  // ─── VoidScreen nav button ────────────────────────────────────────────────
+
+  group('VoidScreen nav button', () {
+    testWidgets('nav button visible on landing state', (tester) async {
+      await tester.pumpWidget(ProviderScope(
+        overrides: [
+          storageServiceProvider.overrideWithValue(FakeStorageService()),
+          sortedGemsProvider.overrideWithValue([]),
+        ],
+        child: const MaterialApp(home: VoidScreen()),
+      ));
+      await tester.pump();
+
+      expect(find.byKey(const Key('gems_nav_button')), findsOneWidget);
+    });
+
+    testWidgets('shows gem count when gems > 0', (tester) async {
+      final gems = [
+        makeGem(id: '1'),
+        makeGem(id: '2'),
+        makeGem(id: '3'),
+      ];
+      await tester.pumpWidget(ProviderScope(
+        overrides: [
+          storageServiceProvider.overrideWithValue(FakeStorageService()),
+          sortedGemsProvider.overrideWithValue(gems),
+        ],
+        child: const MaterialApp(home: VoidScreen()),
+      ));
+      await tester.pump();
+
+      expect(find.text('3'), findsOneWidget);
+    });
+
+    testWidgets('hides count when 0 gems', (tester) async {
+      await tester.pumpWidget(ProviderScope(
+        overrides: [
+          storageServiceProvider.overrideWithValue(FakeStorageService()),
+          sortedGemsProvider.overrideWithValue([]),
+        ],
+        child: const MaterialApp(home: VoidScreen()),
+      ));
+      await tester.pump();
+
+      // The nav button exists but no count text
+      expect(find.byKey(const Key('gems_nav_button')), findsOneWidget);
+      // No digit text within the button area
+      expect(find.text('0'), findsNothing);
+    });
+
+    testWidgets('tapping nav button navigates to GemsScreen when logged in',
+        (tester) async {
+      await tester.pumpWidget(ProviderScope(
+        overrides: [
+          storageServiceProvider.overrideWithValue(FakeStorageService()),
+          sortedGemsProvider.overrideWithValue([]),
+          isLoggedInProvider.overrideWithValue(true),
+        ],
+        child: const MaterialApp(home: VoidScreen()),
+      ));
+      await tester.pump();
+
+      await tester.tap(find.byKey(const Key('gems_nav_button')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(GemsScreen), findsOneWidget);
+    });
+
+    testWidgets('tapping nav button navigates to LoginScreen when not logged in',
+        (tester) async {
+      await tester.pumpWidget(ProviderScope(
+        overrides: [
+          storageServiceProvider.overrideWithValue(FakeStorageService()),
+          sortedGemsProvider.overrideWithValue([]),
+          isLoggedInProvider.overrideWithValue(false),
+        ],
+        child: const MaterialApp(home: VoidScreen()),
+      ));
+      await tester.pump();
+
+      await tester.tap(find.byKey(const Key('gems_nav_button')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(LoginScreen), findsOneWidget);
     });
   });
 }
