@@ -13,6 +13,8 @@ import '../widgets/ethereal_text.dart';
 import '../widgets/glowing_mic_button.dart';
 import '../widgets/void_timer_widget.dart';
 import 'auth_screen.dart';
+import 'gems_screen.dart';
+import 'login_screen.dart';
 
 /// Main screen for The Void app - Ethereal voice capture experience
 class VoidScreen extends ConsumerWidget {
@@ -79,6 +81,13 @@ class VoidScreen extends ConsumerWidget {
         // Background ethereal text
         const EtherealBackground(),
 
+        // Nav/profile button — top right
+        Positioned(
+          top: 12,
+          right: 16,
+          child: _buildNavButton(context, ref),
+        ),
+
         // Main content
         Positioned.fill(
           child: Column(
@@ -126,6 +135,73 @@ class VoidScreen extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+
+  /// Nav/profile button — shows user initial when logged in, gem icon when not.
+  Widget _buildNavButton(BuildContext context, WidgetRef ref) {
+    final isLoggedIn = ref.watch(isLoggedInProvider);
+    final email = ref.watch(currentUserEmailProvider);
+    final gemCount = ref.watch(sortedGemsProvider).length;
+
+    return GestureDetector(
+      key: const Key('gems_nav_button'),
+      onTap: () {
+        if (isLoggedIn) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const GemsScreen()),
+          );
+        } else {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const LoginScreen()),
+          );
+        }
+      },
+      child: Opacity(
+        opacity: isLoggedIn ? 0.7 : 0.5,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (isLoggedIn && email != null && email.isNotEmpty)
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: VoidColors.accent.withValues(alpha: 0.6),
+                  ),
+                ),
+                child: Center(
+                  child: Text(
+                    email[0].toUpperCase(),
+                    style: TextStyle(
+                      color: VoidColors.accent,
+                      fontSize: 13,
+                      fontFamily: 'serif',
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              )
+            else
+              Icon(Icons.auto_awesome, size: 18, color: VoidColors.accent),
+            if (gemCount > 0) ...[
+              const SizedBox(width: 4),
+              Text(
+                '$gemCount',
+                style: TextStyle(
+                  color: VoidColors.accent,
+                  fontSize: 13,
+                  fontFamily: 'serif',
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 
