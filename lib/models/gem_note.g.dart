@@ -16,6 +16,8 @@ _$GemNoteImpl _$$GemNoteImplFromJson(Map<String, dynamic> json) =>
       tags:
           (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ??
           const [],
+      userId: json['userId'] as String?,
+      audioUrl: json['audioUrl'] as String?,
     );
 
 Map<String, dynamic> _$$GemNoteImplToJson(_$GemNoteImpl instance) =>
@@ -26,4 +28,6 @@ Map<String, dynamic> _$$GemNoteImplToJson(_$GemNoteImpl instance) =>
       'title': instance.title,
       'durationSeconds': instance.durationSeconds,
       'tags': instance.tags,
+      'userId': instance.userId,
+      'audioUrl': instance.audioUrl,
     };
