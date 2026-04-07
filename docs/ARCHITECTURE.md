@@ -176,6 +176,37 @@ Multi-stage Docker build: Flutter SDK builds web assets, nginx serves them with 
 
 ---
 
+## Database Migrations
+
+Schema changes are managed via Supabase CLI migrations in `supabase/migrations/`. Files are timestamped SQL scripts, version-controlled in git.
+
+### Applying migrations
+
+```bash
+# Link to your Supabase project (one-time)
+supabase link --project-ref <your-project-ref>
+
+# Push all pending migrations to remote
+supabase db push
+```
+
+### Current migrations
+
+| Migration | Purpose |
+|-----------|---------|
+| `create_gems_table` | `gems` table with RLS (users access own gems only), indexes on `user_id` and `saved_at` |
+| `create_storage_bucket` | `gems-audio` private bucket with per-user folder policies |
+
+### Creating new migrations
+
+```bash
+supabase migration new <descriptive_name>
+# Edit the generated file in supabase/migrations/
+# Commit, then supabase db push to apply
+```
+
+---
+
 ## Key Design Decisions
 
 | Decision | Why |

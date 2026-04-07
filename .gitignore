@@ -46,3 +46,7 @@ app.*.map.json
 
 # Environment secrets (never commit)
 .env.json
+
+# Supabase CLI temp files
+supabase/.temp/
+supabase/.branches/
