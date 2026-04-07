@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:the_void_app/controllers/gems_controller.dart';
 import 'package:the_void_app/models/gem_note.dart';
+import 'package:the_void_app/screens/gem_detail_screen.dart';
 import 'package:the_void_app/screens/gems_screen.dart';
 import 'package:the_void_app/services/storage_service.dart';
 import 'package:the_void_app/widgets/gem_card.dart';
@@ -121,4 +122,171 @@ void main() {
       expect(find.textContaining('gems'), findsOneWidget);
     });
   });
+
+  // ─── GemDetailScreen ────────────────────────────────────────────────────
+
+  group('GemDetailScreen', () {
+    /// Helper: push GemDetailScreen with a pre-populated gem in the controller.
+    Widget makeDetailScreen({
+      required GemNote gem,
+    }) {
+      final fake = FakeStorageService();
+      return ProviderScope(
+        overrides: [
+          storageServiceProvider.overrideWithValue(fake),
+          // Pre-populate the controller state with the gem
+          gemsControllerProvider.overrideWith((ref) {
+            final controller = GemsController(fake);
+            // Directly set the state via saveGem after construction
+            return controller;
+          }),
+        ],
+        child: MaterialApp(
+          home: _DetailScreenLoader(gem: gem),
+        ),
+      );
+    }
+
+    testWidgets('shows full transcript', (tester) async {
+      final gem = makeGem(transcript: 'Full transcript text here');
+      await tester.pumpWidget(makeDetailScreen(gem: gem));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Full transcript text here'), findsOneWidget);
+    });
+
+    testWidgets('shows title when set', (tester) async {
+      final gem = makeGem(title: 'My Gem Title');
+      await tester.pumpWidget(makeDetailScreen(gem: gem));
+      await tester.pumpAndSettle();
+
+      expect(find.text('My Gem Title'), findsOneWidget);
+    });
+
+    testWidgets('shows hint when no title', (tester) async {
+      final gem = makeGem(title: null);
+      await tester.pumpWidget(makeDetailScreen(gem: gem));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Tap to name'), findsOneWidget);
+    });
+
+    testWidgets('tapping title area reveals TextField', (tester) async {
+      final gem = makeGem(title: null);
+      await tester.pumpWidget(makeDetailScreen(gem: gem));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('gem_title_display')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(TextField), findsOneWidget);
+    });
+
+    testWidgets('delete button shows confirmation dialog', (tester) async {
+      final gem = makeGem();
+      await tester.pumpWidget(makeDetailScreen(gem: gem));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.delete_outline));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Delete this gem?'), findsOneWidget);
+    });
+
+    testWidgets('cancelling delete dialog leaves screen intact',
+        (tester) async {
+      final gem = makeGem();
+      await tester.pumpWidget(makeDetailScreen(gem: gem));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.delete_outline));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Keep'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(GemDetailScreen), findsOneWidget);
+    });
+
+    testWidgets('back button pops GemDetailScreen', (tester) async {
+      final gem = makeGem();
+      final fake = FakeStorageService();
+      await tester.pumpWidget(ProviderScope(
+        overrides: [
+          storageServiceProvider.overrideWithValue(fake),
+          gemsControllerProvider.overrideWith((ref) => GemsController(fake)),
+        ],
+        child: MaterialApp(
+          home: Builder(
+            builder: (context) => ElevatedButton(
+              onPressed: () async {
+                // Save gem to the controller via the notifier
+                final container = ProviderScope.containerOf(context);
+                await container
+                    .read(gemsControllerProvider.notifier)
+                    .saveGem(transcript: gem.transcript);
+                final gems = container.read(gemsControllerProvider);
+                if (context.mounted && gems.isNotEmpty) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => GemDetailScreen(gemId: gems.first.id),
+                    ),
+                  );
+                }
+              },
+              child: const Text('Go'),
+            ),
+          ),
+        ),
+      ));
+
+      await tester.tap(find.text('Go'));
+      await tester.pumpAndSettle();
+      expect(find.byType(GemDetailScreen), findsOneWidget);
+
+      await tester.tap(find.byTooltip('Back'));
+      await tester.pumpAndSettle();
+      expect(find.byType(GemDetailScreen), findsNothing);
+    });
+  });
+}
+
+/// Helper widget that saves a gem to the controller, then shows GemDetailScreen.
+class _DetailScreenLoader extends ConsumerStatefulWidget {
+  const _DetailScreenLoader({required this.gem});
+  final GemNote gem;
+
+  @override
+  ConsumerState<_DetailScreenLoader> createState() =>
+      _DetailScreenLoaderState();
+}
+
+class _DetailScreenLoaderState extends ConsumerState<_DetailScreenLoader> {
+  bool _loaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadGem();
+  }
+
+  Future<void> _loadGem() async {
+    await ref.read(gemsControllerProvider.notifier).saveGem(
+          transcript: widget.gem.transcript,
+          title: widget.gem.title,
+          durationSeconds: widget.gem.durationSeconds,
+        );
+    if (mounted) {
+      setState(() => _loaded = true);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_loaded) return const SizedBox.shrink();
+    final gems = ref.watch(gemsControllerProvider);
+    if (gems.isEmpty) return const SizedBox.shrink();
+    return GemDetailScreen(gemId: gems.first.id);
+  }
 }
