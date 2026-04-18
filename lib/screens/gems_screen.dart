@@ -181,7 +181,7 @@ class GemsScreen extends ConsumerWidget {
                 key: const Key('delete_account_button'),
                 onPressed: () {
                   Navigator.pop(context); // close sheet first
-                  _confirmDeleteAccount(context);
+                  _confirmDeleteAccount(context, ref);
                 },
                 child: Text(
                   'Delete account',
@@ -218,7 +218,7 @@ class GemsScreen extends ConsumerWidget {
     );
   }
 
-  void _confirmDeleteAccount(BuildContext context) {
+  void _confirmDeleteAccount(BuildContext context, WidgetRef ref) {
     showDialog<void>(
       context: context,
       builder: (_) => AlertDialog(
@@ -251,6 +251,11 @@ class GemsScreen extends ConsumerWidget {
               Navigator.pop(context); // close dialog
               try {
                 await AuthService.deleteAccount();
+                // Wipe local secure storage so transcripts don't remain
+                // visible on this device after account deletion.
+                await ref
+                    .read(gemsControllerProvider.notifier)
+                    .clearAllLocalData();
                 if (context.mounted) {
                   Navigator.pop(context); // pop GemsScreen back to home
                 }

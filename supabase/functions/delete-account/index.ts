@@ -64,8 +64,27 @@ serve(async (req) => {
     })
   }
 
-  // Delete the user via the admin API (service role only)
   const adminClient = createClient(supabaseUrl, serviceRoleKey)
+
+  // Delete all audio files in gems-audio/{userId}/ before removing the user.
+  // The gems table rows cascade on auth.users deletion, but storage objects
+  // are managed separately and will become orphaned without this step.
+  try {
+    const { data: files, error: listError } = await adminClient.storage
+      .from('gems-audio')
+      .list(user.id)
+
+    if (!listError && files && files.length > 0) {
+      const paths = files.map((f: { name: string }) => `${user.id}/${f.name}`)
+      await adminClient.storage.from('gems-audio').remove(paths)
+      console.log(`delete-account: removed ${paths.length} audio file(s) for`, user.id)
+    }
+  } catch (storageErr) {
+    // Non-fatal — log and continue; user deletion is the priority
+    console.warn('delete-account: storage cleanup failed (continuing)', storageErr)
+  }
+
+  // Delete the user via the admin API (service role only)
   const { error: deleteError } = await adminClient.auth.admin.deleteUser(user.id)
 
   if (deleteError) {
