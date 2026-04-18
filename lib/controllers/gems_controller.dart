@@ -176,6 +176,18 @@ class GemsController extends StateNotifier<List<GemNote>> {
     }
   }
 
+  /// Wipes all locally cached gems from secure storage and clears in-memory
+  /// state. Called after a successful account deletion so transcripts don't
+  /// remain visible on the same device.
+  Future<void> clearAllLocalData() async {
+    try {
+      await _storageService.clearAllGems();
+      state = [];
+    } catch (e) {
+      debugPrint('GemsController: clearAllLocalData failed: $e');
+    }
+  }
+
   GemNote? getGem(String gemId) {
     try {
       return state.firstWhere((g) => g.id == gemId);
