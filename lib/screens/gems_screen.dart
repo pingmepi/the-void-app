@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../config/app_config.dart';
 import '../controllers/auth_controller.dart';
 import '../controllers/gems_controller.dart';
 import '../main.dart';
@@ -174,9 +176,104 @@ class GemsScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 8),
+              // Delete account
+              TextButton(
+                key: const Key('delete_account_button'),
+                onPressed: () {
+                  Navigator.pop(context); // close sheet first
+                  _confirmDeleteAccount(context);
+                },
+                child: Text(
+                  'Delete account',
+                  style: TextStyle(
+                    color: Colors.red.shade400.withAlpha(180),
+                    fontFamily: 'serif',
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+              // Privacy policy
+              TextButton(
+                key: const Key('account_privacy_policy_link'),
+                onPressed: () => launchUrl(
+                  Uri.parse(AppConfig.privacyPolicyUrl),
+                  mode: LaunchMode.externalApplication,
+                ),
+                child: Text(
+                  'Privacy Policy',
+                  style: TextStyle(
+                    color: VoidColors.textFaded,
+                    fontSize: 12,
+                    fontFamily: 'serif',
+                    decoration: TextDecoration.underline,
+                    decorationColor: VoidColors.textFaded,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _confirmDeleteAccount(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: VoidColors.backgroundLight,
+        title: Text(
+          'Delete your account?',
+          style: TextStyle(
+            color: VoidColors.textPrimary,
+            fontFamily: 'serif',
+          ),
+        ),
+        content: Text(
+          'All your gems will be permanently deleted. This cannot be undone.',
+          style: TextStyle(
+            color: VoidColors.textSecondary,
+            fontFamily: 'serif',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: VoidColors.textFaded),
+            ),
+          ),
+          TextButton(
+            key: const Key('confirm_delete_account_button'),
+            onPressed: () async {
+              Navigator.pop(context); // close dialog
+              try {
+                await AuthService.deleteAccount();
+                if (context.mounted) {
+                  Navigator.pop(context); // pop GemsScreen back to home
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Failed to delete account. Please try again.',
+                        style: TextStyle(fontFamily: 'serif'),
+                      ),
+                      backgroundColor: VoidColors.backgroundLight,
+                    ),
+                  );
+                }
+              }
+            },
+            child: Text(
+              'Delete forever',
+              style: TextStyle(color: Colors.red.shade300),
+            ),
+          ),
+        ],
       ),
     );
   }

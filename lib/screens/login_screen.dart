@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../config/app_config.dart';
 import '../controllers/auth_controller.dart';
 import '../main.dart';
 import '../services/auth_service.dart';
@@ -138,6 +140,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
 
               const Spacer(),
+
+              // Privacy policy
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: TextButton(
+                  key: const Key('privacy_policy_link'),
+                  onPressed: () => launchUrl(
+                    Uri.parse(AppConfig.privacyPolicyUrl),
+                    mode: LaunchMode.externalApplication,
+                  ),
+                  child: Text(
+                    'Privacy Policy',
+                    style: TextStyle(
+                      color: VoidColors.textFaded,
+                      fontSize: 12,
+                      fontFamily: 'serif',
+                      decoration: TextDecoration.underline,
+                      decorationColor: VoidColors.textFaded,
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ),

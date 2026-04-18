@@ -22,6 +22,9 @@ class AppConfig {
   /// Signed URL expiry for audio playback (1 year)
   static const int audioUrlExpirySeconds = 60 * 60 * 24 * 365;
 
+  /// Privacy policy URL — shown on the sign-in screen and account sheet.
+  static const String privacyPolicyUrl = 'https://thevoidapp.com/privacy';
+
   /// True when Supabase credentials have been provided.
   static bool get isConfigured =>
       supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty;
