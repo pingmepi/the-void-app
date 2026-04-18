@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy — The Void</title>
+  <style>
+    :root {
+      --bg: #0d0b14;
+      --bg-light: #151221;
+      --accent: #7fffd4;
+      --text: #e8e8e8;
+      --text-secondary: #8b8b9e;
+      --text-faded: #4a4a5e;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: Georgia, 'Times New Roman', serif;
+      line-height: 1.8;
+      padding: 0 16px;
+    }
+
+    .wrap {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 64px 0 96px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 56px;
+    }
+
+    .wordmark {
+      font-size: 28px;
+      letter-spacing: 6px;
+      color: var(--accent);
+      font-weight: 300;
+    }
+
+    .subtitle {
+      margin-top: 8px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      font-style: italic;
+    }
+
+    .updated {
+      margin-top: 40px;
+      font-size: 12px;
+      color: var(--text-faded);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    h2 {
+      font-size: 16px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-top: 48px;
+      margin-bottom: 16px;
+      font-weight: 400;
+    }
+
+    p {
+      color: var(--text-secondary);
+      font-size: 15px;
+      margin-bottom: 16px;
+    }
+
+    ul {
+      color: var(--text-secondary);
+      font-size: 15px;
+      padding-left: 24px;
+      margin-bottom: 16px;
+    }
+
+    ul li {
+      margin-bottom: 8px;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(127, 255, 212, 0.3);
+    }
+
+    a:hover {
+      border-bottom-color: var(--accent);
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid var(--text-faded);
+      margin: 48px 0;
+      opacity: 0.3;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 64px;
+      font-size: 13px;
+      color: var(--text-faded);
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+
+    <header>
+      <div class="wordmark">THE VOID</div>
+      <div class="subtitle">Privacy Policy</div>
+      <div class="updated">Last updated: April 2026</div>
+    </header>
+
+    <p>
+      The Void is a voice note app built around one principle: your thoughts belong to you.
+      This policy explains what data we collect, why we collect it, and how you can have it
+      permanently deleted.
+    </p>
+
+    <h2>What we collect</h2>
+    <ul>
+      <li>
+        <strong>Voice transcripts.</strong> When you speak into the app, your audio is
+        transcribed on-device via the operating system's speech recognition API. If you
+        choose to save a transcript as a gem, the text is stored in your account.
+      </li>
+      <li>
+        <strong>Audio recordings.</strong> If your device supports it, a raw audio file
+        may be captured alongside the transcript. Saved audio is uploaded to secure cloud
+        storage tied to your account. Unsaved audio is discarded immediately.
+      </li>
+      <li>
+        <strong>Account information.</strong> When you sign in with Google or Apple, we
+        receive your email address and a unique identifier from that provider. We do not
+        receive or store your password.
+      </li>
+    </ul>
+
+    <h2>What we do not collect</h2>
+    <ul>
+      <li>We do not record audio in the background or when the app is not in use.</li>
+      <li>We do not sell or share your data with advertisers or third-party analytics.</li>
+      <li>We do not retain transcripts you choose not to save — they are wiped from memory
+          when the countdown expires.</li>
+      <li>We do not access your contacts, location, camera, or any sensor other than the
+          microphone (when you tap the mic button).</li>
+    </ul>
+
+    <h2>How your data is stored</h2>
+    <p>
+      Saved gems are stored in two places:
+    </p>
+    <ul>
+      <li>
+        <strong>On your device</strong> — encrypted using the platform's secure storage
+        (iOS Keychain / Android Keystore / macOS Keychain). Only your device can read this data.
+      </li>
+      <li>
+        <strong>In the cloud</strong> — synced to Supabase, a GDPR-compliant database
+        provider. Your data is protected by row-level security: only you, authenticated
+        with your account, can read or modify your gems. Audio files are stored in an
+        access-controlled private bucket.
+      </li>
+    </ul>
+
+    <h2>Third-party services</h2>
+    <ul>
+      <li>
+        <strong>Supabase</strong> (<a href="https://supabase.com/privacy" target="_blank" rel="noopener">privacy policy</a>)
+        — database, authentication, and file storage.
+      </li>
+      <li>
+        <strong>Google Sign-In</strong> (<a href="https://policies.google.com/privacy" target="_blank" rel="noopener">privacy policy</a>)
+        — optional authentication method.
+      </li>
+      <li>
+        <strong>Sign in with Apple</strong> (<a href="https://www.apple.com/legal/privacy/" target="_blank" rel="noopener">privacy policy</a>)
+        — optional authentication method.
+      </li>
+    </ul>
+    <p>
+      Speech transcription is handled entirely by the operating system's built-in
+      speech recognition (Apple Speech Framework on iOS/macOS, Android SpeechRecognizer
+      on Android). Audio is processed locally; we do not send raw audio to our own servers
+      for transcription.
+    </p>
+
+    <h2>Data retention</h2>
+    <p>
+      Your gems are retained until you delete them or delete your account. You can delete
+      individual gems at any time from within the app. You can delete your entire account
+      and all associated data — gems and audio files — from the account settings screen.
+      Deletion is permanent and cannot be undone.
+    </p>
+
+    <h2>Your rights</h2>
+    <p>
+      You have the right to access, correct, or erase your personal data at any time.
+      The in-app delete account flow permanently removes all data we hold about you.
+      If you need further assistance exercising these rights, contact us at the address
+      below.
+    </p>
+
+    <h2>Children</h2>
+    <p>
+      The Void is not directed at children under 13 (or under 16 in the EU). We do not
+      knowingly collect personal information from children. If you believe a child has
+      provided us with their data, please contact us and we will delete it promptly.
+    </p>
+
+    <h2>Changes to this policy</h2>
+    <p>
+      If we make material changes to this policy, we will update the "Last updated" date
+      at the top and, where required by law, notify you in-app or by email. Continued use
+      of the app after changes take effect constitutes acceptance of the updated policy.
+    </p>
+
+    <h2>Contact</h2>
+    <p>
+      Questions or requests regarding your data:<br />
+      <a href="mailto:privacy@thevoidapp.com">privacy@thevoidapp.com</a>
+    </p>
+
+    <hr />
+
+    <footer>
+      speak. rescue what matters. let the rest go.
+    </footer>
+
+  </div>
+</body>
+</html>
