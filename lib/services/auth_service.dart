@@ -31,6 +31,21 @@ class AuthService {
     await supabase.auth.signOut();
   }
 
+  /// Permanently deletes the current user's account via the `delete-account`
+  /// Edge Function, then signs out locally.
+  ///
+  /// Throws on network error or if the function returns a non-2xx status.
+  static Future<void> deleteAccount() async {
+    await supabase.functions.invoke(
+      'delete-account',
+      method: HttpMethod.post,
+    );
+    // Local sign-out — session is already invalidated server-side
+    try {
+      await supabase.auth.signOut();
+    } catch (_) {}
+  }
+
   /// Returns the current user, or null if Supabase isn't initialized or no
   /// session exists. The try-catch makes this safe to call in tests and during
   /// early app startup before [Supabase.initialize] completes.

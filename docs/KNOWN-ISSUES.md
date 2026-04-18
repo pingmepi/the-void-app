@@ -60,6 +60,15 @@ Issues encountered during development, how they were resolved, and current worka
 
 ---
 
+### Mac mic permission dialog mid-recording
+**Problem**: On macOS systems where microphone access is set to "ask every time", the system permission dialog appears _after_ the user taps the mic button. By the time the user reads and approves the dialog, the recording start is delayed and — if the countdown has begun — the 10-second window can lapse before they can say anything.
+
+**Fix**: Added `Permission.microphone.request()` call in `main()` on non-web platforms, immediately after Supabase initialises and before `runApp`. The dialog now appears at app launch rather than mid-flow, so by the time the user taps the mic the OS has already resolved the permission.
+
+**File**: `lib/main.dart`
+
+---
+
 ## Current Limitations
 
 ### No audio playback
@@ -77,5 +86,3 @@ The app still uses the default Flutter blue square icon. Needs a branded 1024x10
 ### No delete account flow
 Apple App Store requires a way for users to delete their account. This needs a Supabase Edge Function for server-side user deletion (client-side `auth.admin.deleteUser` requires the service role key which must never be on-device).
 
-### No account management UI
-GemsScreen has no sign-out button or account info display. Users who sign in have no way to sign out or see which account they're using without reinstalling.

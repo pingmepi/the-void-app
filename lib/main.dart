@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'config/app_config.dart';
@@ -23,6 +25,15 @@ Future<void> main() async {
     url: AppConfig.supabaseUrl,
     anonKey: AppConfig.supabaseAnonKey,
   );
+
+  // Pre-warm microphone permission on native platforms before the user taps
+  // the mic button. On macOS some users have "ask every time" set — requesting
+  // upfront means the dialog appears at launch (expected), not mid-recording
+  // when the 10-second countdown is already running.
+  // Web handles mic access natively via the browser getUserMedia prompt.
+  if (!kIsWeb) {
+    await Permission.microphone.request();
+  }
 
   runApp(const ProviderScope(child: TheVoidApp()));
 }
