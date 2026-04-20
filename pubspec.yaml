@@ -57,6 +57,9 @@ dependencies:
   # Audio recording (parallel to speech_to_text)
   record: ^5.1.2
 
+  # Audio playback for gems
+  just_audio: ^0.9.36
+
   # Temp directory for native audio files
   path_provider: ^2.1.4
 

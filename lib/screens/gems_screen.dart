@@ -11,13 +11,53 @@ import '../services/auth_service.dart';
 import '../widgets/gem_card.dart';
 import 'gem_detail_screen.dart';
 
-class GemsScreen extends ConsumerWidget {
+class GemsScreen extends ConsumerStatefulWidget {
   const GemsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final gems = ref.watch(sortedGemsProvider);
+  ConsumerState<GemsScreen> createState() => _GemsScreenState();
+}
+
+class _GemsScreenState extends ConsumerState<GemsScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  String _query = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  List<GemNote> _filter(List<GemNote> gems) {
+    final q = _query.toLowerCase().trim();
+    if (q.isEmpty) return gems;
+    return gems.where((g) {
+      return (g.title ?? '').toLowerCase().contains(q) ||
+          g.transcript.toLowerCase().contains(q);
+    }).toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final allGems = ref.watch(sortedGemsProvider);
     final isLoggedIn = ref.watch(isLoggedInProvider);
+    final gems = _filter(allGems);
+
+    final Widget body;
+    if (allGems.isEmpty) {
+      body = _buildEmptyState();
+    } else {
+      body = Column(
+        children: [
+          _buildSearchBar(),
+          Expanded(
+            child: gems.isEmpty
+                ? _buildNoResults()
+                : _buildGemsList(context, ref, gems),
+          ),
+        ],
+      );
+    }
 
     return Scaffold(
       backgroundColor: VoidColors.background,
@@ -48,7 +88,74 @@ class GemsScreen extends ConsumerWidget {
             ),
         ],
       ),
-      body: gems.isEmpty ? _buildEmptyState() : _buildGemsList(context, ref, gems),
+      body: body,
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
+      child: TextField(
+        controller: _searchController,
+        onChanged: (v) => setState(() => _query = v),
+        style: TextStyle(
+          color: VoidColors.textPrimary,
+          fontFamily: 'serif',
+          fontSize: 14,
+        ),
+        decoration: InputDecoration(
+          hintText: 'search transcripts...',
+          hintStyle: TextStyle(
+            color: VoidColors.textFaded,
+            fontFamily: 'serif',
+            fontStyle: FontStyle.italic,
+            fontSize: 14,
+          ),
+          prefixIcon: Icon(Icons.search, color: VoidColors.textFaded, size: 18),
+          suffixIcon: _query.isNotEmpty
+              ? IconButton(
+                  icon: Icon(Icons.close, color: VoidColors.textFaded, size: 18),
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() => _query = '');
+                  },
+                )
+              : null,
+          filled: true,
+          fillColor: VoidColors.backgroundLight,
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide:
+                BorderSide(color: VoidColors.textGhost.withValues(alpha: 0.5)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide:
+                BorderSide(color: VoidColors.textGhost.withValues(alpha: 0.5)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide:
+                BorderSide(color: VoidColors.accent.withValues(alpha: 0.5)),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNoResults() {
+    return Center(
+      child: Text(
+        'no gems match "$_query"',
+        style: TextStyle(
+          color: VoidColors.textFaded,
+          fontFamily: 'serif',
+          fontStyle: FontStyle.italic,
+          fontSize: 15,
+        ),
+      ),
     );
   }
 

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../controllers/gems_controller.dart';
 import '../main.dart';
+import '../widgets/gem_audio_player.dart';
 import '../widgets/gem_card.dart';
 
 class GemDetailScreen extends ConsumerStatefulWidget {
@@ -151,6 +152,14 @@ class _GemDetailScreenState extends ConsumerState<GemDetailScreen> {
                   ],
                 ],
               ),
+
+              if (gem.audioUrl != null) ...[
+                const SizedBox(height: 20),
+                GemAudioPlayer(
+                  audioUrl: gem.audioUrl!,
+                  durationSeconds: gem.durationSeconds,
+                ),
+              ],
 
               const SizedBox(height: 24),
 

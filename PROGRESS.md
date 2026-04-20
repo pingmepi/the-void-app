@@ -1,6 +1,6 @@
 # Progress
 
-Current status of The Void as of 2026-04-08.
+Current status of The Void as of 2026-04-18.
 
 ---
 
@@ -48,6 +48,12 @@ Current status of The Void as of 2026-04-08.
 - [x] Android: INTERNET + RECORD_AUDIO permissions, minSdk 23, release signing via key.properties
 - [x] iOS: NSMicrophoneUsageDescription, NSSpeechRecognitionUsageDescription, URL schemes
 
+### Store Readiness
+- [x] App icon: branded 1024x1024 asset via flutter_launcher_icons (PR #6)
+- [x] Delete account flow: Supabase Edge Function + in-app trigger (PR #6)
+- [x] Privacy policy: hosted on GitHub Pages, in-app url_launcher link (PR #9)
+- [x] Account management on GemsScreen: sign-out bottom sheet with user email (PR #5)
+
 ### Tests (43 total)
 - [x] FakeStorageService: in-memory test double for all storage operations
 - [x] 14 GemsController unit tests (save, delete, update title, sort, load from storage)
@@ -71,13 +77,9 @@ Current status of The Void as of 2026-04-08.
 ## Pending
 
 ### High Priority (Store Submission Blockers)
-- [ ] **App icon**: replace Flutter default with branded 1024x1024 PNG (use flutter_launcher_icons)
-- [ ] **Delete account flow**: Apple requires this — needs Supabase Edge Function for server-side deletion
-- [ ] **Privacy policy page**: host the policy text (content ready in docs/app-store-submission.md) and add in-app url_launcher link
-- [ ] **Supabase DB setup**: run SQL for gems table, RLS policies, storage bucket (documented in submission guide)
+- [ ] **Supabase DB setup**: verify prod has gems table, RLS policies, and storage bucket applied (documented in submission guide)
 
 ### Medium Priority (Feature Completeness)
-- [ ] **Account management on GemsScreen**: sign-out button / bottom sheet with user email
 - [ ] **Audio playback**: gems have audioUrl but no playback UI yet
 - [ ] **Gem search/filter**: search by transcript content or title
 - [ ] **Tags**: GemNote.tags field exists but no UI to add/edit tags
@@ -94,6 +96,7 @@ Current status of The Void as of 2026-04-08.
 
 | Version | Date | Highlights |
 |---------|------|-----------|
+| 0.4.0 | 2026-04-18 | Store readiness: app icon, delete account, privacy policy page, account mgmt sheet |
 | 0.3.0 | 2026-04-08 | Gems screens, auth, remote sync, mobile config, 43 tests |
 | 0.2.0 | 2026-01-13 | Waveform visualization, countdown tuning, silence detection |
 | 0.1.0 | 2026-01-12 | Initial: state machine, speech engine, privacy, basic UI |
