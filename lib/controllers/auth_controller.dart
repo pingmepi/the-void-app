@@ -2,11 +2,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../services/auth_service.dart';
-import '../services/supabase_service.dart';
 
 /// Streams Supabase auth state changes.
+///
+/// Safe to read before (or without) `Supabase.initialize` — in E2E builds
+/// without credentials, `Supabase.instance.client` throws. We catch that and
+/// return an empty stream so screens that watch this provider (e.g. VoidScreen
+/// via [isLoggedInProvider]) can still build.
 final authStateProvider = StreamProvider<AuthState>((ref) {
-  return supabase.auth.onAuthStateChange;
+  try {
+    return Supabase.instance.client.auth.onAuthStateChange;
+  } catch (_) {
+    return const Stream<AuthState>.empty();
+  }
 });
 
 /// Whether the user is currently signed in.

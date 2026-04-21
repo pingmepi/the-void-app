@@ -2,6 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import 'e2e_id.dart';
+
 /// Widget displaying the countdown timer and rescue button
 class VoidTimerWidget extends StatelessWidget {
   final int countdownSeconds;
@@ -98,7 +100,8 @@ class VoidTimerWidget extends StatelessWidget {
             SizedBox(height: gap),
 
             // Rescue button
-            FilledButton.icon(
+            e2eId('rescue_button', FilledButton.icon(
+              key: const Key('rescue_button'),
               onPressed: onRescue,
               icon: const Icon(Icons.save),
               label: const Text('Rescue'),
@@ -113,7 +116,7 @@ class VoidTimerWidget extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-            ),
+            )),
 
             const SizedBox(height: 12),
 

@@ -60,7 +60,7 @@ The core of the app is a finite state machine in `VoidController`:
 │  SpeechService     — wraps speech_to_text               │
 │  RecordingService  — parallel audio capture             │
 │  StorageService    — flutter_secure_storage + Supabase  │
-│  AuthService       — OAuth (Google, Apple)              │
+│  AuthService       — email/password + OAuth (Google, Apple) │
 │  SupabaseService   — Supabase client singleton          │
 ├─────────────────────────────────────────────────────────┤
 │  EXTERNAL                                               │

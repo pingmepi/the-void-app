@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -10,12 +11,27 @@ import 'config/app_config.dart';
 import 'controllers/app_lifecycle_controller.dart';
 import 'screens/void_screen.dart';
 
+/// When true (set at build time with `--dart-define=E2E=true`), the app:
+/// - enables the accessibility/semantics tree so Playwright can query widgets
+///   by their `Key` / `Semantics.identifier` via DOM
+/// - exposes `window.__VOID_E2E__ = true` for test-only branching
+const bool kE2EMode = bool.fromEnvironment('E2E', defaultValue: false);
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  if (kE2EMode) {
+    // Render the semantics tree to DOM so Playwright can locate widgets via
+    // their Keys. Without this, Flutter web draws to a canvas and the DOM has
+    // nothing queryable.
+    SemanticsBinding.instance.ensureSemantics();
+  }
+
   // Hard runtime guard — works in debug AND release builds.
   // assert() is compiled away in release; this is not.
-  if (!AppConfig.isConfigured) {
+  // In E2E mode we allow boot without creds so smoke tests can run against a
+  // plain .env-less build; Supabase-backed features simply stay unauthenticated.
+  if (!AppConfig.isConfigured && !kE2EMode) {
     throw StateError(
       'Missing Supabase credentials. '
       'Build with --dart-define-from-file=.env.json '
@@ -23,10 +39,12 @@ Future<void> main() async {
     );
   }
 
-  await Supabase.initialize(
-    url: AppConfig.supabaseUrl,
-    anonKey: AppConfig.supabaseAnonKey,
-  );
+  if (AppConfig.isConfigured) {
+    await Supabase.initialize(
+      url: AppConfig.supabaseUrl,
+      anonKey: AppConfig.supabaseAnonKey,
+    );
+  }
 
   // Pre-warm microphone permission on supported native platforms before the
   // user taps the mic button. On macOS some users have "ask every time" set —

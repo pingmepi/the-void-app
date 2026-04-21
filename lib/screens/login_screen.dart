@@ -6,6 +6,8 @@ import '../config/app_config.dart';
 import '../controllers/auth_controller.dart';
 import '../main.dart';
 import '../services/auth_service.dart';
+import '../widgets/e2e_id.dart';
+import '../widgets/email_auth_form.dart';
 
 /// Full-screen sign-in screen with The Void branding.
 ///
@@ -60,11 +62,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return Scaffold(
       backgroundColor: VoidColors.background,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
           child: Column(
             children: [
-              const Spacer(flex: 2),
+              const SizedBox(height: 32),
 
               // Wordmark
               Text(
@@ -90,7 +92,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
               ),
 
-              const Spacer(flex: 2),
+              const SizedBox(height: 40),
 
               // Error
               if (_error != null) ...[
@@ -104,6 +106,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 const SizedBox(height: 16),
               ],
+
+              // Email/password form
+              EmailAuthForm(
+                onAuthenticated: () {
+                  if (mounted) Navigator.of(context).pop(true);
+                },
+              ),
+
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(child: Divider(color: VoidColors.textFaded.withValues(alpha: 0.3))),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(
+                      'or',
+                      style: TextStyle(
+                        color: VoidColors.textFaded,
+                        fontSize: 12,
+                        fontFamily: 'serif',
+                      ),
+                    ),
+                  ),
+                  Expanded(child: Divider(color: VoidColors.textFaded.withValues(alpha: 0.3))),
+                ],
+              ),
+              const SizedBox(height: 16),
 
               // Google Sign-In
               _SignInButton(
@@ -125,7 +154,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               const SizedBox(height: 24),
 
               // Dismiss
-              TextButton(
+              e2eId('maybe_later_button', TextButton(
                 onPressed: _isLoading
                     ? null
                     : () => Navigator.of(context).pop(false),
@@ -137,9 +166,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     fontFamily: 'serif',
                   ),
                 ),
-              ),
+              )),
 
-              const Spacer(),
+              const SizedBox(height: 32),
 
               // Privacy policy
               Padding(
