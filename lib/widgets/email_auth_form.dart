@@ -82,6 +82,20 @@ class _EmailAuthFormState extends State<EmailAuthForm> {
         );
       }
       if (!mounted) return;
+      // Supabase sign-up can succeed without creating a session when email
+      // confirmation is enabled on the project. Only treat the flow as
+      // authenticated when a real session exists; otherwise stay on the form
+      // and tell the user to check their inbox.
+      if (Supabase.instance.client.auth.currentSession == null) {
+        setState(() {
+          _loading = false;
+          _info = _mode == _Mode.signUp
+              ? 'Check your inbox to confirm your email, then sign in.'
+              : 'Signed in, but no session was created. Please try again.';
+          if (_mode == _Mode.signUp) _mode = _Mode.signIn;
+        });
+        return;
+      }
       widget.onAuthenticated();
     } on AuthException catch (e) {
       if (mounted) {

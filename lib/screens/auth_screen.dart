@@ -189,9 +189,14 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             const SizedBox(height: 12),
           ],
 
-          // Email/password form
+          // Email/password form.
+          //
+          // No `onBeforeSubmit` hook: email auth does not redirect, so there's
+          // no window in which we'd lose the transcript. Writing the pending
+          // rescue here would leave a stale key in secure storage that
+          // GemsController._resumePendingRescue() could replay on a later cold
+          // start, causing duplicate saves. OAuth below keeps the persistence.
           EmailAuthForm(
-            onBeforeSubmit: _persistPendingRescueIfWeb,
             onAuthenticated: () {
               if (mounted) Navigator.of(context).pop(true);
             },
