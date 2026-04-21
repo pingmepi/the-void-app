@@ -5,32 +5,57 @@ import 'package:uuid/uuid.dart';
 import '../models/gem_note.dart';
 import '../services/auth_service.dart';
 import '../services/storage_service.dart';
+import 'auth_controller.dart';
 
 /// Manages saved gems: local persistence + Supabase remote sync.
 class GemsController extends StateNotifier<List<GemNote>> {
-  GemsController(this._storageService) : super([]) {
+  GemsController(this._storageService, this._ref) : super([]) {
     _loadGems();
+    // Re-sync when auth state transitions to signed-in. Without this, a user
+    // who opens the app anonymously and logs in later never pulls their
+    // existing Supabase gems, and any gem saved during the login flow only
+    // shows up via the local append in [saveGem].
+    _ref.listen<String?>(currentUserIdProvider, (previous, next) {
+      if (previous == next) return;
+      if (next != null) {
+        _loadGems();
+      }
+    });
   }
 
   final StorageService _storageService;
+  final Ref _ref;
 
-  /// On startup: load local gems, then pull from Supabase if authenticated.
-  /// Also checks for a pending rescue (transcript saved before OAuth redirect).
-  Future<void> _loadGems() async {
+  /// Serializes [_loadGems] calls. The constructor call and the auth-listener
+  /// call can otherwise overlap, causing an earlier run's `state =` to
+  /// clobber a later run's merged result.
+  Future<void>? _loadInFlight;
+
+  /// On startup (and on sign-in): load local gems, then pull from Supabase if
+  /// authenticated and merge. Also checks for a pending rescue (transcript
+  /// saved before OAuth redirect).
+  Future<void> _loadGems() {
+    return _loadInFlight ??= _doLoadGems()
+        .whenComplete(() => _loadInFlight = null);
+  }
+
+  Future<void> _doLoadGems() async {
     try {
       // 1. Load local cache immediately (works offline)
       final localGems = await _storageService.loadAllGems();
-      state = localGems;
+      // Merge with whatever is already in-memory so gems saved during this
+      // session (e.g. the rescue-then-login path) aren't dropped.
+      state = _mergeById(state, localGems);
 
       final userId = AuthService.userId;
 
-      // 2. If authenticated, replace with authoritative Supabase data
+      // 2. If authenticated, merge authoritative Supabase data over local.
+      // Remote wins on conflict; local-only gems (e.g. saved offline or
+      // pre-login) are preserved.
       if (userId != null) {
         final remoteGems =
             await _storageService.fetchGemsFromSupabase(userId);
-        if (remoteGems.isNotEmpty) {
-          state = remoteGems;
-        }
+        state = _mergeById(state, remoteGems);
       }
 
       // 3. Check for a pending rescue that survived a web OAuth redirect
@@ -38,6 +63,16 @@ class GemsController extends StateNotifier<List<GemNote>> {
     } catch (e) {
       debugPrint('GemsController: _loadGems failed: $e');
     }
+  }
+
+  /// Merge two gem lists by id. Entries in [incoming] override entries in
+  /// [existing] with the same id; ids only present in one list are kept.
+  List<GemNote> _mergeById(List<GemNote> existing, List<GemNote> incoming) {
+    final byId = <String, GemNote>{for (final g in existing) g.id: g};
+    for (final g in incoming) {
+      byId[g.id] = g;
+    }
+    return byId.values.toList();
   }
 
   /// If the user was redirected to OAuth mid-rescue, their transcript was
@@ -206,7 +241,7 @@ class GemsController extends StateNotifier<List<GemNote>> {
 final gemsControllerProvider =
     StateNotifierProvider<GemsController, List<GemNote>>((ref) {
   final storageService = ref.watch(storageServiceProvider);
-  return GemsController(storageService);
+  return GemsController(storageService, ref);
 });
 
 final allGemsProvider = Provider<List<GemNote>>((ref) {
