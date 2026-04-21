@@ -17,9 +17,10 @@ class GemsController extends StateNotifier<List<GemNote>> {
     // shows up via the local append in [saveGem].
     _ref.listen<String?>(currentUserIdProvider, (previous, next) {
       if (previous == next) return;
-      if (next != null) {
-        _loadGems();
-      }
+      // Reload on any auth transition. On sign-in (null → uid) we fetch the
+      // user's Supabase gems. On sign-out (uid → null) we re-scope to local
+      // storage so the previous user's rows don't stay in memory.
+      _loadGems();
     });
   }
 
@@ -31,31 +32,59 @@ class GemsController extends StateNotifier<List<GemNote>> {
   /// clobber a later run's merged result.
   Future<void>? _loadInFlight;
 
+  /// Set when a reload is requested while one is already in-flight. Ensures
+  /// that an auth-state change firing mid-load (e.g. sign-in arrives after we
+  /// already snapshotted `userId == null`) still triggers a second run once
+  /// the current one completes. Without this, the in-flight guard would
+  /// coalesce both calls and the post-login Supabase fetch would be skipped.
+  bool _reloadQueued = false;
+
   /// On startup (and on sign-in): load local gems, then pull from Supabase if
   /// authenticated and merge. Also checks for a pending rescue (transcript
   /// saved before OAuth redirect).
   Future<void> _loadGems() {
-    return _loadInFlight ??= _doLoadGems()
-        .whenComplete(() => _loadInFlight = null);
+    final existing = _loadInFlight;
+    if (existing != null) {
+      _reloadQueued = true;
+      return existing;
+    }
+    return _loadInFlight = _doLoadGems().whenComplete(() {
+      _loadInFlight = null;
+      if (_reloadQueued) {
+        _reloadQueued = false;
+        _loadGems();
+      }
+    });
   }
 
   Future<void> _doLoadGems() async {
     try {
-      // 1. Load local cache immediately (works offline)
-      final localGems = await _storageService.loadAllGems();
-      // Merge with whatever is already in-memory so gems saved during this
-      // session (e.g. the rescue-then-login path) aren't dropped.
-      state = _mergeById(state, localGems);
-
       final userId = AuthService.userId;
 
-      // 2. If authenticated, merge authoritative Supabase data over local.
-      // Remote wins on conflict; local-only gems (e.g. saved offline or
-      // pre-login) are preserved.
+      // 1. Load local cache and scope it to the current user. On a shared
+      // device another account's cached gems must never remain visible after
+      // the auth state changes. When anonymous we show only gems with no
+      // associated user (legacy entries from before auth was required) —
+      // never another account's cached rows.
+      final localGems = await _storageService.loadAllGems();
+      final scopedLocal =
+          localGems.where((g) => g.userId == userId).toList();
+
+      // Preserve any in-memory gems belonging to the current user (e.g.
+      // saved during this session before the local write completed).
+      final scopedExisting = state.where((g) => g.userId == userId).toList();
+      state = _mergeById(scopedExisting, scopedLocal);
+
+      // 2. If authenticated, replace with authoritative Supabase data,
+      // keeping only unsynced local-origin gems for the same user. Entries
+      // no longer present remotely (deleted elsewhere) are dropped.
       if (userId != null) {
         final remoteGems =
             await _storageService.fetchGemsFromSupabase(userId);
-        state = _mergeById(state, remoteGems);
+        final remoteIds = remoteGems.map((g) => g.id).toSet();
+        final localUnsynced =
+            state.where((g) => !remoteIds.contains(g.id)).toList();
+        state = [...remoteGems, ...localUnsynced];
       }
 
       // 3. Check for a pending rescue that survived a web OAuth redirect
