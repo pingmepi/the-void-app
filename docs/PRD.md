@@ -36,7 +36,7 @@ The Void is a voice-first note app where **nothing is saved unless you choose to
 - Swipe or tap delete with confirmation
 
 ### Sync (Optional)
-- Sign in with Google or Apple to back up gems to the cloud
+- Sign in with email/password, Google, or Apple to back up gems to the cloud
 - Local-first: the app works fully offline, sync happens when available
 - Auth is optional — never forced, never nagging
 
@@ -81,13 +81,12 @@ The visual tone should feel like speaking into a void — calm, dark, spacious.
 - Voice recording + real-time transcription
 - 10-second countdown with rescue
 - Gems: list, detail, rename, delete
-- Google + Apple OAuth with cloud sync
+- Email/password + Google + Apple OAuth with cloud sync
 - Encrypted local storage
 - iOS + Android store submission
 
 ### Out of scope (v1)
-- Audio playback (field exists, no UI yet)
-- Tags and search
+- Tags
 - Sharing / export
 - Collaborative features
 - Notification reminders

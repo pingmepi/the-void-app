@@ -6,6 +6,10 @@ All notable changes to The Void are documented here.
 
 ### Added
 
+- **Email/password sign-in** — full login form with sign-in / sign-up mode toggle, forgot-password reset, and Supabase `AuthException` handling. Available both on the full-screen LoginScreen and the mid-rescue AuthScreen bottom sheet.
+- **Playwright E2E suite** — 19 passing specs across smoke, navigation, auth form, voiding UI transitions, and edge cases. Covers happy paths, validation failure modes, and small-viewport behavior. Auto-skips 2 credential-gated specs when `.env.json` + test creds are absent. See [e2e/README.md](e2e/README.md) and [e2e/SELECTORS.md](e2e/SELECTORS.md).
+- **`e2eId` wrapper** ([lib/widgets/e2e_id.dart](lib/widgets/e2e_id.dart)) — wraps widgets in `Semantics(identifier: …)` for stable DOM selectors during E2E runs.
+- **E2E mode guard** — `--dart-define=E2E=true` enables Flutter's semantics tree (`SemanticsBinding.ensureSemantics()`) and lets the app boot without Supabase credentials for headless smoke tests.
 - **Gems screen** — browse, search, and manage all rescued transcripts in a dark-themed list sorted newest first
 - **Gem detail view** — read full transcript with date, duration, and inline title editing (tap to name, auto-saves on submit or unfocus)
 - **Delete with confirmation** — remove gems via confirmation dialog from both list and detail views
@@ -13,7 +17,7 @@ All notable changes to The Void are documented here.
 - **Remote gem sync** — gems automatically back up to Supabase when signed in; local-first with encrypted storage
 - **Audio recording** — voice captured alongside transcription via MediaRecorder (web) or temp M4A (native) for future playback
 - **Navigation button** — profile/nav button on home screen shows user initial (signed in) or sparkle icon (signed out) with gem count badge
-- **Login screen** — full-screen branded sign-in with "Maybe later" dismiss and auto-pop on auth completion
+- **Login screen** — full-screen branded sign-in (email + OAuth) with "Maybe later" dismiss and auto-pop on auth completion; switched to `SingleChildScrollView` so the form fits small viewports
 - **Ethereal UI** — dark navy/purple theme with aquamarine accents, serif fonts, animated glowing mic button, floating background text
 - **Responsive layout** — adaptive countdown UI across screen sizes
 - **Mobile release config** — Android (permissions, OAuth deep links, release signing, minSdk 23) and iOS (mic/speech permissions, OAuth URL scheme)

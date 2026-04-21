@@ -29,6 +29,10 @@ flutter test test/void_controller_countdown_test.dart
 
 # Lint / static analysis
 flutter analyze
+
+# Playwright E2E (Flutter web). Auto-builds with --dart-define=E2E=true.
+cd e2e && npm install && npx playwright install chromium ffmpeg
+cd e2e && npx playwright test
 ```
 
 ## Architecture
@@ -70,3 +74,11 @@ Dark ethereal palette defined in `lib/main.dart`:
 - Text: `#E8E8E8`
 
 Material 3 with serif font family for the ethereal aesthetic. Keep new UI consistent with this palette.
+
+## E2E (Playwright)
+Specs live under `e2e/` and drive the Flutter web build via DOM queries against the semantics tree. Two rules:
+
+1. Flutter's canvas renders nothing queryable by default — the app enables `SemanticsBinding.ensureSemantics()` only when built with `--dart-define=E2E=true` (see `lib/main.dart` → `kE2EMode`). Playwright's `webServer` block sets this automatically.
+2. `Key('foo')` does NOT surface in the DOM. For anything a test needs to locate, wrap with `e2eId('foo', …)` (`lib/widgets/e2e_id.dart`) — it emits `flt-semantics-identifier="foo"` and the Playwright helpers in `e2e/helpers/flutter.ts` query by that attribute.
+
+When adding a new tappable/editable widget that an E2E spec must touch: wrap it with `e2eId(...)` and record the id in `e2e/SELECTORS.md` under the "Identifier-based" table.

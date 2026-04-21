@@ -9,6 +9,7 @@ import '../controllers/speech_controller.dart';
 import '../controllers/void_controller.dart';
 import '../main.dart';
 import '../models/void_state.dart';
+import '../widgets/e2e_id.dart';
 import '../widgets/ethereal_text.dart';
 import '../widgets/glowing_mic_button.dart';
 import '../widgets/void_timer_widget.dart';
@@ -95,11 +96,17 @@ class VoidScreen extends ConsumerWidget {
               const Spacer(flex: 5),
 
               // Mic button in center
-              AnimatedGlowingMicButton(
-                onTap: () {
-                  ref.read(speechControllerProvider.notifier).startRecording();
-                },
-                size: micButtonSize,
+              e2eId(
+                'mic_button_idle',
+                AnimatedGlowingMicButton(
+                  key: const Key('mic_button_idle'),
+                  onTap: () {
+                    ref
+                        .read(speechControllerProvider.notifier)
+                        .startRecording();
+                  },
+                  size: micButtonSize,
+                ),
               ),
 
               const Spacer(flex: 3),
@@ -144,7 +151,7 @@ class VoidScreen extends ConsumerWidget {
     final email = ref.watch(currentUserEmailProvider);
     final gemCount = ref.watch(sortedGemsProvider).length;
 
-    return GestureDetector(
+    return e2eId('gems_nav_button', GestureDetector(
       key: const Key('gems_nav_button'),
       onTap: () {
         if (isLoggedIn) {
@@ -202,7 +209,7 @@ class VoidScreen extends ConsumerWidget {
           ],
         ),
       ),
-    );
+    ));
   }
 
   /// Listening screen - stacked transcript text with glowing mic
@@ -236,12 +243,18 @@ class VoidScreen extends ConsumerWidget {
               // Mic button
               Padding(
                 padding: EdgeInsets.only(bottom: screenHeight * 0.12),
-                child: GlowingMicButton(
-                  onTap: () {
-                    ref.read(speechControllerProvider.notifier).stopRecording();
-                  },
-                  isListening: true,
-                  size: micButtonSize,
+                child: e2eId(
+                  'mic_button_listening',
+                  GlowingMicButton(
+                    key: const Key('mic_button_listening'),
+                    onTap: () {
+                      ref
+                          .read(speechControllerProvider.notifier)
+                          .stopRecording();
+                    },
+                    isListening: true,
+                    size: micButtonSize,
+                  ),
                 ),
               ),
             ],

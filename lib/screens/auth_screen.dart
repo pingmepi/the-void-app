@@ -7,6 +7,7 @@ import '../controllers/void_controller.dart';
 import '../main.dart';
 import '../services/auth_service.dart';
 import '../services/storage_service.dart';
+import '../widgets/email_auth_form.dart';
 
 /// Bottom sheet shown when the user taps Rescue without being signed in.
 ///
@@ -47,6 +48,18 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     });
   }
 
+  Future<void> _persistPendingRescueIfWeb() async {
+    if (!kIsWeb) return;
+    final session = ref.read(voidControllerProvider).session;
+    if (session != null && session.transcript.isNotEmpty) {
+      final storageService = ref.read(storageServiceProvider);
+      await storageService.savePendingRescue(
+        transcript: session.transcript,
+        durationSeconds: session.recordingDuration.inSeconds,
+      );
+    }
+  }
+
   Future<void> _signIn(Future<void> Function() signInFn) async {
     setState(() {
       _isLoading = true;
@@ -54,17 +67,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     });
 
     try {
-      // On web: persist transcript before the OAuth redirect wipes state
-      if (kIsWeb) {
-        final session = ref.read(voidControllerProvider).session;
-        if (session != null && session.transcript.isNotEmpty) {
-          final storageService = ref.read(storageServiceProvider);
-          await storageService.savePendingRescue(
-            transcript: session.transcript,
-            durationSeconds: session.recordingDuration.inSeconds,
-          );
-        }
-      }
+      await _persistPendingRescueIfWeb();
 
       await signInFn();
 
@@ -185,6 +188,30 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             ),
             const SizedBox(height: 12),
           ],
+
+          // Email/password form
+          EmailAuthForm(
+            onBeforeSubmit: _persistPendingRescueIfWeb,
+            onAuthenticated: () {
+              if (mounted) Navigator.of(context).pop(true);
+            },
+          ),
+
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(child: Divider(color: VoidColors.textFaded.withValues(alpha: 0.3))),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Text(
+                  'or',
+                  style: TextStyle(color: VoidColors.textFaded, fontSize: 12),
+                ),
+              ),
+              Expanded(child: Divider(color: VoidColors.textFaded.withValues(alpha: 0.3))),
+            ],
+          ),
+          const SizedBox(height: 16),
 
           // Google Sign-In button
           _SignInButton(

@@ -292,7 +292,10 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(LoginScreen), findsOneWidget);
 
-      await tester.tap(find.textContaining('Maybe later'));
+      final maybeLater = find.textContaining('Maybe later');
+      await tester.ensureVisible(maybeLater);
+      await tester.pumpAndSettle();
+      await tester.tap(maybeLater);
       await tester.pumpAndSettle();
       expect(find.byType(LoginScreen), findsNothing);
     });

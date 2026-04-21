@@ -27,6 +27,30 @@ class AuthService {
     );
   }
 
+  static Future<void> signInWithEmail({
+    required String email,
+    required String password,
+  }) async {
+    await supabase.auth.signInWithPassword(
+      email: email.trim(),
+      password: password,
+    );
+  }
+
+  static Future<void> signUpWithEmail({
+    required String email,
+    required String password,
+  }) async {
+    await supabase.auth.signUp(
+      email: email.trim(),
+      password: password,
+    );
+  }
+
+  static Future<void> sendPasswordReset(String email) async {
+    await supabase.auth.resetPasswordForEmail(email.trim());
+  }
+
   static Future<void> signOut() async {
     await supabase.auth.signOut();
   }
