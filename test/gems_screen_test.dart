@@ -139,7 +139,7 @@ void main() {
           storageServiceProvider.overrideWithValue(fake),
           // Pre-populate the controller state with the gem
           gemsControllerProvider.overrideWith((ref) {
-            final controller = GemsController(fake);
+            final controller = GemsController(fake, ref);
             // Directly set the state via saveGem after construction
             return controller;
           }),
@@ -217,7 +217,7 @@ void main() {
       await tester.pumpWidget(ProviderScope(
         overrides: [
           storageServiceProvider.overrideWithValue(fake),
-          gemsControllerProvider.overrideWith((ref) => GemsController(fake)),
+          gemsControllerProvider.overrideWith((ref) => GemsController(fake, ref)),
         ],
         child: MaterialApp(
           home: Builder(
