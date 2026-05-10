@@ -78,7 +78,7 @@ These were flagged `🟡 ASK USER` in the implementation plan and were NOT resol
 
 2. **P0-5 privacy URL** — ✅ CONFIRMED. URL is `https://pingmepi.github.io/the-void-app/privacy` — paste this into Play Console. Email updated to `kmandalam@gmail.com` (commit after this doc).
 
-3. **P0-7 manual verification** — ✅ RESOLVED — not needed before Phase 2. User should test delete-account manually with their own account when they have a device in hand. The code change (clearing pending rescue key) is correct and unit-tested.
+3. **P0-7 manual verification** — ✅ RESOLVED. User is the sole account holder and is comfortable purging their own data for testing. Use the primary account: save 1–2 gems, tap Delete account, confirm Supabase dashboard shows gems + auth user gone, app lands signed-out.
 
 4. **P0-2 manual verification** — Needs a device/emulator with no on-device model installed (e.g., non-English locale Android emulator with no offline model). Tap record → expect `NoOfflineModelSheet` to appear. Can be deferred to device testing session.
 
