@@ -63,10 +63,14 @@ class SpeechController extends StateNotifier<SpeechControllerState> {
 
     final speechStarted = results[0];
     if (!speechStarted) {
-      state = state.copyWith(error: 'Failed to start speech recognition');
       await _recordingService.cancelRecording();
-      _voidController.stopListening();
-      _reset();
+      if (!_speechService.hasOnDeviceModel) {
+        _voidController.signalNoOfflineModel();
+      } else {
+        state = state.copyWith(error: 'Failed to start speech recognition');
+        _voidController.stopListening();
+        _reset();
+      }
     } else {
       state = state.copyWith(status: 'listening');
     }

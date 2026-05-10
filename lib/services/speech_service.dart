@@ -11,6 +11,7 @@ class SpeechService {
   bool _isInitialized = false;
   bool _isListening = false;
   bool _isManualStop = false; // Track manual stops to prevent callback race
+  bool _hasOnDeviceModel = false;
 
   /// Callback for transcript updates (called with each partial/final result)
   Function(String text, bool isFinal)? onTranscriptUpdate;
@@ -60,6 +61,10 @@ class SpeechService {
       );
 
       _isInitialized = available;
+      if (available) {
+        final locales = await _speechToText.locales();
+        _hasOnDeviceModel = locales.isNotEmpty;
+      }
       return available;
     } catch (e) {
       onError?.call('Failed to initialize speech recognition: $e');
@@ -86,8 +91,9 @@ class SpeechService {
         pauseFor: const Duration(seconds: 5),  // Stop after 5 seconds of silence (natural pauses)
         listenOptions: stt.SpeechListenOptions(
           partialResults: true,
-          cancelOnError: false,
+          cancelOnError: true,
           listenMode: stt.ListenMode.dictation,
+          onDevice: true,
         ),
         localeId: localeId ?? 'en_US',
       );
@@ -136,6 +142,11 @@ class SpeechService {
 
   /// Check if speech recognition is available on this device
   bool get isAvailable => _speechToText.isAvailable;
+
+  /// Whether an on-device speech model was detected during initialization.
+  /// False until [initialize] succeeds. When false, [startListening] with
+  /// onDevice:true may silently fail on Android — show setup UX instead.
+  bool get hasOnDeviceModel => _hasOnDeviceModel;
 
   /// Get available locales
   Future<List<stt.LocaleName>> getAvailableLocales() async {

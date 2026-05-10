@@ -12,6 +12,7 @@ import '../models/void_state.dart';
 import '../widgets/e2e_id.dart';
 import '../widgets/ethereal_text.dart';
 import '../widgets/glowing_mic_button.dart';
+import '../widgets/no_offline_model_sheet.dart';
 import '../widgets/void_timer_widget.dart';
 import 'auth_screen.dart';
 import 'gems_screen.dart';
@@ -60,6 +61,18 @@ class VoidScreen extends ConsumerWidget {
                 ref,
                 countdownSeconds ?? 10,
                 displayTranscript,
+              );
+            } else if (voidState.isNoOfflineModelError) {
+              return Stack(
+                children: [
+                  _buildLandingScreen(context, ref, micButtonSize, height),
+                  const Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: NoOfflineModelSheet(),
+                  ),
+                ],
               );
             } else {
               return _buildResultScreen(context, ref, voidState);

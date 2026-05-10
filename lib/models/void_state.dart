@@ -20,6 +20,9 @@ enum VoidState {
   
   /// Note has been saved as a gem
   saved,
+
+  /// On-device speech model is not installed; show setup CTA
+  errorNoOfflineModel,
 }
 
 /// Extension methods for VoidState
@@ -46,6 +49,11 @@ extension VoidStateExtension on VoidState {
     return this == VoidState.countdown;
   }
 
+  /// Whether the no-offline-model error sheet should be shown
+  bool get isNoOfflineModelError {
+    return this == VoidState.errorNoOfflineModel;
+  }
+
   /// Display name for the state
   String get displayName {
     switch (this) {
@@ -61,6 +69,8 @@ extension VoidStateExtension on VoidState {
         return 'Gone';
       case VoidState.saved:
         return 'Saved';
+      case VoidState.errorNoOfflineModel:
+        return 'Setup required';
     }
   }
 }

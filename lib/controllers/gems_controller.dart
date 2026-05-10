@@ -216,7 +216,10 @@ class GemsController extends StateNotifier<List<GemNote>> {
   /// remain visible on the same device.
   Future<void> clearAllLocalData() async {
     try {
-      await _storageService.clearAllGems();
+      await Future.wait([
+        _storageService.clearAllGems(),
+        _storageService.clearPendingRescue(),
+      ]);
       state = [];
     } catch (e) {
       debugPrint('GemsController: clearAllLocalData failed: $e');
