@@ -123,6 +123,28 @@ class VoidController extends StateNotifier<VoidControllerViewState> {
     }
   }
 
+  /// Transition to ERROR_NO_OFFLINE_MODEL — shown when onDevice:true fails
+  /// because no speech model is installed on the device.
+  void signalNoOfflineModel() {
+    _wipeMemory();
+    state = state.copyWith(
+      status: VoidState.errorNoOfflineModel,
+      clearSession: true,
+    );
+    _notifyVoidListeners();
+  }
+
+  /// Cancel an active countdown and return to IDLE without voiding.
+  /// Idempotent — safe to call from any non-COUNTDOWN state.
+  void cancelCountdown() {
+    if (state.status != VoidState.countdown) return;
+    _countdownTimer?.cancel();
+    _countdownTimer = null;
+    _countdownPaused = false;
+    state = state.copyWith(status: VoidState.idle, clearSession: true);
+    _notifyVoidListeners();
+  }
+
   /// Reset to IDLE (called from result screen "Tap to continue").
   void reset() {
     _wipeMemory();

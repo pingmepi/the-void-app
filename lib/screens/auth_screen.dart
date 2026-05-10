@@ -2,11 +2,15 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:url_launcher/url_launcher.dart';
+
+import '../config/app_config.dart';
 import '../controllers/auth_controller.dart';
 import '../controllers/void_controller.dart';
 import '../main.dart';
 import '../services/auth_service.dart';
 import '../services/storage_service.dart';
+import '../widgets/e2e_id.dart';
 import '../widgets/email_auth_form.dart';
 
 /// Bottom sheet shown when the user taps Rescue without being signed in.
@@ -246,6 +250,27 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                 color: VoidColors.textFaded,
                 fontSize: 13,
                 fontFamily: 'serif',
+              ),
+            ),
+          ),
+
+          // Privacy policy link — visible before sign-in per Play Store requirements
+          e2eId(
+            'privacy-policy-link',
+            TextButton(
+              onPressed: () => launchUrl(
+                Uri.parse(AppConfig.privacyPolicyUrl),
+                mode: LaunchMode.externalApplication,
+              ),
+              child: Text(
+                'Privacy Policy',
+                style: TextStyle(
+                  color: VoidColors.textFaded,
+                  fontSize: 12,
+                  fontFamily: 'serif',
+                  decoration: TextDecoration.underline,
+                  decorationColor: VoidColors.textFaded,
+                ),
               ),
             ),
           ),

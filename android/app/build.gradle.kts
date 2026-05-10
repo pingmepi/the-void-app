@@ -50,11 +50,13 @@ android {
     }
 
     buildTypes {
-        release {
+        getByName("release") {
             signingConfig = if (keyPropertiesFile.exists()) {
                 signingConfigs.getByName("release")
             } else {
-                signingConfigs.getByName("debug")
+                throw GradleException(
+                    "Release build requires android/key.properties — see docs/PLAY_STORE_UPLOAD.md Phase 1."
+                )
             }
         }
     }

@@ -189,8 +189,11 @@
     <p>
       Speech transcription is handled entirely by the operating system's built-in
       speech recognition (Apple Speech Framework on iOS/macOS, Android SpeechRecognizer
-      on Android). Audio is processed locally; we do not send raw audio to our own servers
-      for transcription.
+      on Android). On Android, the app explicitly requests on-device-only recognition
+      (equivalent to the <code>onDevice: true</code> flag in the Android SpeechRecognizer
+      API), which prevents the audio stream from being routed to remote servers even if
+      the device has a cloud-backed speech model installed. Audio is processed locally;
+      we do not send raw audio to our own servers for transcription.
     </p>
 
     <h2>Data retention</h2>

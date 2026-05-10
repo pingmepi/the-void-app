@@ -24,6 +24,9 @@ Source of truth: `e2eId(...)` wrappers in Flutter source. DOM attribute is
 | `auth_error_message` | [lib/widgets/email_auth_form.dart](../lib/widgets/email_auth_form.dart) | (available, not yet asserted) |
 | `auth_info_message` | [lib/widgets/email_auth_form.dart](../lib/widgets/email_auth_form.dart) | (available, not yet asserted) |
 | `maybe_later_button` | [lib/screens/login_screen.dart](../lib/screens/login_screen.dart) | navigation |
+| `no-model-open-settings` | [lib/widgets/no_offline_model_sheet.dart](../lib/widgets/no_offline_model_sheet.dart) — "Open settings" button | (available, not yet asserted) |
+| `no-model-cancel` | [lib/widgets/no_offline_model_sheet.dart](../lib/widgets/no_offline_model_sheet.dart) — "Cancel" button | (available, not yet asserted) |
+| `privacy-policy-link` | [lib/screens/auth_screen.dart](../lib/screens/auth_screen.dart) — pre-auth privacy link | (available, not yet asserted) |
 
 ## Text-based (fallback — brittle if copy changes)
 
