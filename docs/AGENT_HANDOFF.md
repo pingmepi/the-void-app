@@ -74,15 +74,13 @@ The server-side delete is handled via the `delete-account` Supabase Edge Functio
 
 These were flagged `🟡 ASK USER` in the implementation plan and were NOT resolved:
 
-1. **Release signing key** — `android/key.properties` and `android/upload-keystore.jks` are gitignored. Confirm they exist on the build machine before running `flutter build appbundle`. If not, follow [docs/PLAY_STORE_UPLOAD.md](PLAY_STORE_UPLOAD.md) Phase 1.
+1. **Release signing key** — ⚠️ CONFIRMED MISSING. Neither `android/key.properties` nor `android/upload-keystore.jks` exist on this machine. **The next agent must not attempt a release build.** The user must follow [docs/PLAY_STORE_UPLOAD.md](PLAY_STORE_UPLOAD.md) Phase 1 to generate the keystore and create `key.properties` before any release build is possible.
 
-2. **P0-4 release build verification** — Run `flutter build appbundle --dart-define-from-file=.env.json --build-name=1.0.0 --build-number=1` to confirm P0-4 succeeds with the key present and fails gracefully without it.
+2. **P0-5 privacy URL** — ✅ CONFIRMED. URL is `https://pingmepi.github.io/the-void-app/privacy` — paste this into Play Console. Email updated to `kmandalam@gmail.com` (commit after this doc).
 
-3. **P0-5 privacy URL confirmation** — The published URL is `https://pingmepi.github.io/the-void-app/privacy`. User should confirm this is the URL they will paste into Play Console (currently hardcoded in `AppConfig.privacyPolicyUrl`).
+3. **P0-7 manual verification** — ✅ RESOLVED — not needed before Phase 2. User should test delete-account manually with their own account when they have a device in hand. The code change (clearing pending rescue key) is correct and unit-tested.
 
-4. **P0-7 manual verification** — Needs a throwaway Supabase account to confirm that after "Delete account": `gems` rows gone, Storage prefix empty, auth user deleted, app lands on signed-out home. The agent intentionally did not delete the user's primary account.
-
-5. **P0-2 manual verification** — Needs a device/emulator with no on-device model installed (e.g., non-English locale Android emulator with no offline model). Tap record → expect `NoOfflineModelSheet` to appear.
+4. **P0-2 manual verification** — Needs a device/emulator with no on-device model installed (e.g., non-English locale Android emulator with no offline model). Tap record → expect `NoOfflineModelSheet` to appear. Can be deferred to device testing session.
 
 ---
 
