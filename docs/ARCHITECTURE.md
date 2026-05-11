@@ -12,30 +12,37 @@ The core of the app is a finite state machine in `VoidController`:
 
 ```
 ┌──────┐
-│ IDLE │◄────────────────────────────┐
-└──┬───┘                             │
-   │ tap mic                         │
-   ▼                                 │
-┌───────────┐                        │
-│ LISTENING │── real-time transcript  │
-└──┬────────┘                        │
-   │ 5s silence / manual stop        │
-   ▼                                 │
-┌──────────────┐                     │
-│ TRANSCRIBING │                     │
-└──┬───────────┘                     │
-   │ has content                     │
-   ▼                                 │
-┌───────────┐                        │
-│ COUNTDOWN │── 10 seconds           │
-└──┬────────┘                        │
-   │                                 │
-   ├──→ VOIDED ──────────────────────┘  (auto, memory wiped)
+│ IDLE │◄────────────────────────────────────────┐
+└──┬───┘                                         │
+   │ tap mic                                      │
+   ▼                                              │
+┌───────────┐                                     │
+│ LISTENING │── real-time transcript               │
+└──┬──────┬─┘                                     │
+   │      │ no on-device model detected            │
+   │      ▼                                        │
+   │  ┌──────────────────────┐                    │
+   │  │ ERROR_NO_OFFLINE_MODEL│ (shows setup CTA) │
+   │  └──────────────────────┘                    │
+   │        │ resume + model installed             │
+   │        └─────────────────────────────────────┘
+   │ 5s silence / manual stop
+   ▼
+┌──────────────┐
+│ TRANSCRIBING │
+└──┬───────────┘
+   │ has content
+   ▼
+┌───────────┐
+│ COUNTDOWN │── 10 seconds
+└──┬────────┘
    │
-   └──→ SAVED  ──────────────────────┘  (rescue button, gem persisted)
+   ├──→ VOIDED ──────────────────────────────────┘  (auto, memory wiped)
+   │
+   └──→ SAVED  ──────────────────────────────────┘  (rescue button, gem persisted)
 ```
 
-`VoidState` enum lives in `lib/models/void_state.dart` with extension methods (`isRecording`, `canRescue`, `isCountdownActive`) that drive UI visibility. UI code should use these extensions, not raw enum comparisons.
+`VoidState` enum lives in `lib/models/void_state.dart` with extension methods (`isRecording`, `canRescue`, `isCountdownActive`, `isNoOfflineModelError`) that drive UI visibility. UI code should use these extensions, not raw enum comparisons.
 
 ---
 
@@ -48,6 +55,7 @@ The core of the app is a finite state machine in `VoidController`:
 ├─────────────────────────────────────────────────────────┤
 │  WIDGETS                                                │
 │  GlowingMicButton │ VoidTimer │ Waveform │ GemCard     │
+│  NoOfflineModelSheet                                    │
 ├─────────────────────────────────────────────────────────┤
 │  CONTROLLERS (Riverpod StateNotifier)                   │
 │  VoidController    — state machine, countdown timer     │

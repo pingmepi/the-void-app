@@ -1,13 +1,13 @@
 # Progress
 
-Current status of The Void as of 2026-04-21.
+Current status of The Void as of 2026-05-10.
 
 ---
 
 ## Completed
 
 ### Core App
-- [x] State machine: `IDLE → LISTENING → TRANSCRIBING → COUNTDOWN → VOIDED | SAVED`
+- [x] State machine: `IDLE → LISTENING → TRANSCRIBING → COUNTDOWN → VOIDED | SAVED` (+ `errorNoOfflineModel` from LISTENING when no on-device speech model is installed)
 - [x] VoidController with countdown timer (10 seconds), transcript accumulation
 - [x] SpeechService: real-time transcription, 5s silence detection, 2-minute max
 - [x] RecordingService: parallel audio capture (WebM on web, M4A on native)
@@ -55,6 +55,12 @@ Current status of The Void as of 2026-04-21.
 - [x] Delete account flow: Supabase Edge Function + in-app trigger (PR #6)
 - [x] Privacy policy: hosted on GitHub Pages, in-app url_launcher link (PR #9)
 - [x] Account management on GemsScreen: sign-out bottom sheet with user email (PR #5)
+- [x] On-device STT enforced: `onDevice: true` in SpeechListenOptions (P0-1)
+- [x] No-offline-model UX: `errorNoOfflineModel` state + `NoOfflineModelSheet` deep-link to settings (P0-2)
+- [x] Background countdown cancels to IDLE, not VOIDED (P0-3)
+- [x] Release signing guard: `GradleException` if `key.properties` missing (P0-4)
+- [x] Privacy policy link reachable pre-auth on auth screen (P0-6)
+- [x] Delete account clears pending rescue key from local storage (P0-7)
 
 ### Tests (43 unit/widget + 19 Playwright E2E)
 - [x] FakeStorageService: in-memory test double for all storage operations
@@ -101,6 +107,7 @@ Current status of The Void as of 2026-04-21.
 
 | Version | Date | Highlights |
 |---------|------|-----------|
+| 1.0.0 | 2026-05-10 | P0 pre-publish fixes: on-device STT, errorNoOfflineModel UX, background countdown fix, signing guard, privacy link, delete-account data wipe |
 | 0.5.0 | 2026-04-21 | Email/password auth, Playwright E2E suite (19 specs), semantics bridge for DOM-based selectors |
 | 0.4.0 | 2026-04-18 | Store readiness: app icon, delete account, privacy policy page, account mgmt sheet |
 | 0.3.0 | 2026-04-08 | Gems screens, auth, remote sync, mobile config, 43 tests |

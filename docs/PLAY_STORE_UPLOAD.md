@@ -2,11 +2,11 @@
 
 **App:** The Void
 **Package:** `com.thevoid.the_void_app`
-**Version under test:** `1.0.0+1` (set in [pubspec.yaml:19](pubspec.yaml#L19))
+**Version under test:** `1.0.0+1` (set in [pubspec.yaml](../pubspec.yaml))
 **Min Android:** API 23 (revisit per `FIX_PLAN.md` P1-2)
 **Prereqs:** `FIX_PLAN.md` P0 items completed, `VERIFICATION_PLAN.md` §1–§9 fully checked.
 
-> Apple App Store steps are in [docs/app-store-submission.md](docs/app-store-submission.md) Part 2. This file is the **revised** Play-only path that supersedes Part 1 of that doc.
+> Apple App Store steps are in [app-store-submission.md](app-store-submission.md) Part 2. This file is the **revised** Play-only path that supersedes Part 1 of that doc.
 
 ---
 
@@ -50,11 +50,11 @@ keyAlias=upload
 storeFile=../upload-keystore.jks
 ```
 
-✓ **Verify:** [android/.gitignore](android/.gitignore) lists `key.properties` and `upload-keystore.jks`. Run `git status` — neither file should appear as untracked.
+✓ **Verify:** [android/.gitignore](../android/.gitignore) lists `key.properties` and `upload-keystore.jks`. Run `git status` — neither file should appear as untracked.
 
 ### 1.3 — Confirm Gradle reads it
 
-[android/app/build.gradle.kts](android/app/build.gradle.kts) already wires this up. After applying `FIX_PLAN.md` P0-4, an absent `key.properties` will fail the build at config time. Test:
+[android/app/build.gradle.kts](../android/app/build.gradle.kts) already wires this up. After applying `FIX_PLAN.md` P0-4, an absent `key.properties` will fail the build at config time. Test:
 
 ```bash
 mv android/key.properties /tmp/kp.bak
@@ -106,7 +106,7 @@ Supabase Dashboard → Authentication → URL Configuration → Redirect URLs mu
 com.thevoidapp://login-callback
 ```
 
-(Already wired in [AndroidManifest.xml](android/app/src/main/AndroidManifest.xml) as the only deep-link intent filter.)
+(Already wired in [AndroidManifest.xml](../android/app/src/main/AndroidManifest.xml) as the only deep-link intent filter.)
 
 ---
 

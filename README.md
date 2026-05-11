@@ -119,7 +119,9 @@ lib/
 │   ├── recording_service.dart         # Parallel audio capture (WebM web, M4A native)
 │   ├── storage_service.dart           # Encrypted local storage + Supabase sync
 │   ├── auth_service.dart              # Auth wrapper (email/password + Google/Apple OAuth)
-│   └── supabase_service.dart          # Supabase client singleton
+│   ├── supabase_service.dart          # Supabase client singleton
+│   ├── file_helper_io.dart            # Platform-conditional file helper (native IO)
+│   └── file_helper_stub.dart          # Platform-conditional file helper (web stub)
 └── widgets/
     ├── glowing_mic_button.dart        # Animated pulsing mic (app entry point)
     ├── void_timer_widget.dart         # Circular countdown + rescue button
@@ -129,6 +131,7 @@ lib/
     ├── gem_card.dart                  # Gem list item (title, preview, date, delete)
     ├── gem_audio_player.dart          # Audio playback UI for gems
     ├── email_auth_form.dart           # Reusable email/password form (sign-in/up, reset)
+    ├── no_offline_model_sheet.dart    # Setup CTA when on-device speech model missing
     └── e2e_id.dart                    # Semantics(identifier:) wrapper for Playwright selectors
 
 e2e/                                   # Playwright tests (Flutter web)

@@ -4,8 +4,14 @@ All notable changes to The Void are documented here.
 
 ## [Unreleased]
 
+---
+
+## [1.0.0] — 2026-05-10
+
 ### Added
 
+- **On-device STT enforcement** — `onDevice: true` added to `SpeechListenOptions`; speech never routed to cloud. Matches privacy policy claim.
+- **No-offline-model UX** — `errorNoOfflineModel` state + `NoOfflineModelSheet` widget: deep-links to Android offline speech settings, auto-retries on app resume once model is installed.
 - **Email/password sign-in** — full login form with sign-in / sign-up mode toggle, forgot-password reset, and Supabase `AuthException` handling. Available both on the full-screen LoginScreen and the mid-rescue AuthScreen bottom sheet.
 - **Playwright E2E suite** — 19 passing specs across smoke, navigation, auth form, voiding UI transitions, and edge cases. Covers happy paths, validation failure modes, and small-viewport behavior. Auto-skips 2 credential-gated specs when `.env.json` + test creds are absent. See [e2e/README.md](e2e/README.md) and [e2e/SELECTORS.md](e2e/SELECTORS.md).
 - **`e2eId` wrapper** ([lib/widgets/e2e_id.dart](lib/widgets/e2e_id.dart)) — wraps widgets in `Semantics(identifier: …)` for stable DOM selectors during E2E runs.
@@ -30,9 +36,14 @@ All notable changes to The Void are documented here.
 - **Pending rescue expiry** — cancelled OAuth no longer leaves transcript in storage indefinitely; auto-clears after 5 minutes
 - **Runtime config guard** — missing credentials fail loudly in release builds (replaced debug-only `assert` with runtime check)
 - **Auth safety in tests** — `AuthService.currentUser` wrapped in try-catch to prevent crashes when Supabase isn't initialized
+- **Background countdown** — app backgrounding during countdown now cancels to IDLE (not VOIDED) so user can return and decide
+- **Delete account data wipe** — `clearAllLocalData()` now also clears the pending rescue key so no transcript fragments remain after deletion
+- **Release signing guard** — `build.gradle.kts` now throws `GradleException` at config time if `key.properties` is missing, preventing silent debug-signed release builds
+- **Privacy policy link** — in-app link to privacy policy added to auth screen, accessible pre-login (Play Store requirement)
 
 ### Security
 
 - All gems encrypted at rest via `flutter_secure_storage`
 - Credentials injected at compile time via `--dart-define-from-file` (never committed)
 - Pending rescue transcript auto-expires to prevent stale data in localStorage
+- Speech recognition forced on-device (`onDevice: true`) — audio never leaves the device

@@ -11,7 +11,7 @@ Severity legend: **P0** = blocks submission · **P1** = ship-stopper for v1.0 po
 ## P0 — Must fix before any release build
 
 ### P0-1 · Force on-device speech recognition
-**File:** [lib/services/speech_service.dart:81-90](lib/services/speech_service.dart#L81-L90)
+**File:** [lib/services/speech_service.dart:81-90](../lib/services/speech_service.dart#L81-L90)
 **Why this is P0:** `docs/privacy.html` and `docs/app-store-submission.md` Part 4 both state speech is processed on-device. Current code uses `SpeechListenOptions` without `onDevice: true`, so the OS may route audio to Google Cloud Speech. **Shipping as-is = false privacy claim = Play policy violation + Data Safety form falsified.** (See timeline obs `1139`, `1168`.)
 
 **Change:** add `onDevice: true` to the `SpeechListenOptions` constructor call.
@@ -28,17 +28,17 @@ listenOptions: stt.SpeechListenOptions(
 **Also:** during `initialize()`, check `_speechToText.hasPermission` and the available locales — if the OS does not have an on-device Speech Recognition model installed, surface a setup CTA rather than silently falling back. See decision `1161`: deep-link to Google App voice settings, auto-unblock on return.
 
 ### P0-2 · Mid-recording on-device fallback handling
-**File:** [lib/services/speech_service.dart](lib/services/speech_service.dart) (new helper)
+**File:** [lib/services/speech_service.dart](../lib/services/speech_service.dart) (new helper)
 **Why:** With `onDevice: true`, devices without a downloaded recognizer model will fail `initialize()` or return zero transcripts. Without UX, the user will think the app is broken.
 **Change:** add a state path `LISTENING → ERROR_NO_OFFLINE_MODEL` with copy that fits The Void's voice (no "voice typing" — this app is not a keyboard). Suggested wording: "Your voice stays on your phone. To keep it that way, install the on-device speech model: Settings → Google → Voice → Offline speech recognition → add your language. Come back when it's done." Provide a button that launches the Google App voice-input settings via `url_launcher` intent `package:com.google.android.googlequicksearchbox`. On app resume, auto-retry initialization.
 
 ### P0-3 · Cancel countdown timer on app background
-**File:** [lib/controllers/void_controller.dart](lib/controllers/void_controller.dart) (countdown timer)
+**File:** [lib/controllers/void_controller.dart](../lib/controllers/void_controller.dart) (countdown timer)
 **Why:** Timer keeps ticking while app is backgrounded; if the user takes >countdown-seconds away, returning to the app shows VOIDED state without the user ever seeing the rescue option. `AppLifecycleController` already wipes `VoidSession` on background — the countdown timer must be cancelled too.
 **Change:** in the `paused`/`hidden` lifecycle branch, call `_countdownTimer?.cancel()` and transition state to `IDLE`.
 
 ### P0-4 · Confirm release build is signed (not debug-signed)
-**File:** [android/app/build.gradle.kts:54-58](android/app/build.gradle.kts#L54-L58)
+**File:** [android/app/build.gradle.kts:54-58](../android/app/build.gradle.kts#L54-L58)
 **Why:** Current logic falls back to **debug** signing config if `key.properties` is missing. A release AAB built without `key.properties` will silently sign with the debug key and Play will reject it (or worse, succeed and lock you out of future updates).
 **Change:** in release buildType, throw at config time if `keyPropertiesFile` does not exist:
 
@@ -78,7 +78,7 @@ If the page still has placeholders, edit `docs/privacy.html` and `docs/app-store
 ## P1 — Strongly recommended before public release
 
 ### P1-1 · Enable R8 minification on release builds
-**File:** [android/app/build.gradle.kts](android/app/build.gradle.kts) release buildType + new `android/app/proguard-rules.pro`
+**File:** [android/app/build.gradle.kts](../android/app/build.gradle.kts) release buildType + new `android/app/proguard-rules.pro`
 **Why:** Smaller AAB, harder to reverse-engineer, removes unused code. Right now release builds ship un-minified.
 **Change:**
 ```kotlin
@@ -95,7 +95,7 @@ release {
 Create `android/app/proguard-rules.pro` with `-keep class io.flutter.** { *; }` and rules for any plugins that use reflection (Supabase realtime/JSON, speech_to_text). Then `flutter build appbundle` and verify nothing crashes at startup on a release-mode device.
 
 ### P1-2 · Bump `minSdk` to 24
-**File:** [android/app/build.gradle.kts:46](android/app/build.gradle.kts#L46)
+**File:** [android/app/build.gradle.kts:46](../android/app/build.gradle.kts#L46)
 **Why:** API 23 (Android 6.0) is < 1% of active devices. API 24 (Nougat) unlocks better TLS defaults and APIs the speech recognizer relies on. Keep at 23 only if you have a documented reason.
 **Change:** `minSdk = 24`.
 
@@ -105,12 +105,12 @@ Create `android/app/proguard-rules.pro` with `-keep class io.flutter.** { *; }` 
 **Change:** put a layer-list drawable with the app icon centered on the dark-theme background. Pattern is well-documented; cap effort at 30 minutes.
 
 ### P1-4 · Permission-denied UX
-**File:** [lib/services/speech_service.dart](lib/services/speech_service.dart) error callback chain → UI
+**File:** [lib/services/speech_service.dart](../lib/services/speech_service.dart) error callback chain → UI
 **Why:** If the user denies the mic permission, the app currently has no visible state — the record button just does nothing.
 **Change:** when `Permission.microphone.status.isPermanentlyDenied`, show a SnackBar / inline message with an "Open settings" button (`openAppSettings()` from `permission_handler`).
 
 ### P1-5 · Surface offline / Supabase-down state for gem save
-**File:** [lib/controllers/gems_controller.dart](lib/controllers/gems_controller.dart) save path
+**File:** [lib/controllers/gems_controller.dart](../lib/controllers/gems_controller.dart) save path
 **Why:** Save path already falls back to local-only on Supabase failure (good), but the user has no signal that sync failed. Add a small "Saved locally — will sync when online" banner on the gem card if `audioUrl == null` && user is signed in.
 
 ---

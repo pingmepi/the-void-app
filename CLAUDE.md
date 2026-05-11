@@ -42,10 +42,12 @@ The Void is a single-screen Flutter app with a strict state machine at its core.
 ### State Machine
 `IDLE → LISTENING → TRANSCRIBING → COUNTDOWN → VOIDED | SAVED`
 
-Defined in `lib/models/void_state.dart`. The `VoidState` enum has extension methods (`isRecording`, `canRescue`, `isCountdownActive`, etc.) that drive UI visibility decisions. Use these extensions rather than raw enum comparisons in UI code.
+There is also a `errorNoOfflineModel` state, entered from LISTENING when `onDevice:true` fails because no speech model is installed. It shows `NoOfflineModelSheet`; `AppLifecycleController` auto-retries initialization on resume and returns to IDLE if a model is now present.
+
+Defined in `lib/models/void_state.dart`. The `VoidState` enum has extension methods (`isRecording`, `canRescue`, `isCountdownActive`, `isNoOfflineModelError`, etc.) that drive UI visibility decisions. Use these extensions rather than raw enum comparisons in UI code.
 
 ### State Management
-Riverpod (`flutter_riverpod` + `riverpod_annotation`). All providers use code generation — run `build_runner` after changing annotated provider classes. The three main controllers are:
+Riverpod (`flutter_riverpod` + `riverpod_annotation`). All providers use code generation — run `build_runner` after changing annotated provider classes. The four main controllers are:
 
 - `VoidController` (`lib/controllers/void_controller.dart`) — central state machine; owns the countdown timer, transcript accumulation, and all state transitions
 - `SpeechController` (`lib/controllers/speech_controller.dart`) — bridges `SpeechService` ↔ `VoidController`
